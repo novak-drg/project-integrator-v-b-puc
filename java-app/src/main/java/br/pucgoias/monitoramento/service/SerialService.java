@@ -11,132 +11,150 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 /**
- * SerialService — gerencia a comunicação serial com o Arduino.
+ * Manages serial communication with the Arduino.
  *
- * Responsabilidades:
- *   - Listar portas disponíveis
- *   - Conectar / desconectar da porta serial
- *   - Ler dados em background thread (nunca bloqueando a EDT)
- *   - Notificar listeners quando um SensorData válido chega
- *   - Notificar listeners de status de conexão
- *
- * Projeto Integrador V-B — PUC Goiás — ADS 2026
+ * <p>Responsibilities:
+ * <ul>
+ *   <li>List available serial ports</li>
+ *   <li>Open / close the serial connection</li>
+ *   <li>Read data on a background daemon thread</li>
+ *   <li>Notify registered listeners with parsed {@link SensorData}</li>
+ *   <li>Notify registered listeners with connection status messages</li>
+ * </ul>
  */
 public class SerialService {
 
-    // ─── Configuração serial ─────────────────────────────────────────
     private static final int BAUD_RATE  = 9600;
     private static final int DATA_BITS  = 8;
     private static final int STOP_BITS  = SerialPort.ONE_STOP_BIT;
     private static final int PARITY     = SerialPort.NO_PARITY;
     private static final int TIMEOUT_MS = 3000;
 
-    // ─── Estado interno ──────────────────────────────────────────────
-    private SerialPort   porta;
-    private Thread       threadLeitura;
-    private volatile boolean rodando = false;
+    private SerialPort       port;
+    private Thread           readThread;
+    private volatile boolean running = false;
 
-    // ─── Listeners ───────────────────────────────────────────────────
-    private final List<Consumer<SensorData>>  dadosListeners  = new CopyOnWriteArrayList<>();
-    private final List<Consumer<String>>      statusListeners = new CopyOnWriteArrayList<>();
+    private final List<Consumer<SensorData>> dataListeners   = new CopyOnWriteArrayList<>();
+    private final List<Consumer<String>>     statusListeners = new CopyOnWriteArrayList<>();
 
-    // ─── Registro de listeners ───────────────────────────────────────
-    public void addDadosListener(Consumer<SensorData> listener) {
-        dadosListeners.add(listener);
+    /**
+     * Registers a listener that receives parsed sensor readings.
+     *
+     * @param listener callback invoked for each valid {@link SensorData}
+     */
+    public void addDataListener(Consumer<SensorData> listener) {
+        dataListeners.add(listener);
     }
 
+    /**
+     * Registers a listener that receives connection status messages.
+     *
+     * @param listener callback invoked with a status string
+     */
     public void addStatusListener(Consumer<String> listener) {
         statusListeners.add(listener);
     }
 
-    // ─── Listar portas disponíveis ───────────────────────────────────
-    public static List<String> listarPortas() {
-        List<String> nomes = new ArrayList<>();
+    /**
+     * Returns the names of all available serial ports on this machine.
+     *
+     * @return list of port names (e.g. {@code ["COM3", "COM4"]})
+     */
+    public static List<String> listPorts() {
+        List<String> names = new ArrayList<>();
         for (SerialPort p : SerialPort.getCommPorts()) {
-            nomes.add(p.getSystemPortName());
+            names.add(p.getSystemPortName());
         }
-        return nomes;
+        return names;
     }
 
-    // ─── Conectar ────────────────────────────────────────────────────
-    public boolean conectar(String nomePorta) {
-        desconectar();  // garante estado limpo
+    /**
+     * Opens the specified serial port and starts the background read loop.
+     *
+     * @param portName system port name (e.g. {@code "COM3"})
+     * @return {@code true} if the connection was established successfully
+     */
+    public boolean connect(String portName) {
+        disconnect();
 
-        porta = SerialPort.getCommPort(nomePorta);
-        porta.setBaudRate(BAUD_RATE);
-        porta.setNumDataBits(DATA_BITS);
-        porta.setNumStopBits(STOP_BITS);
-        porta.setParity(PARITY);
-        porta.setComPortTimeouts(
-                SerialPort.TIMEOUT_READ_SEMI_BLOCKING, TIMEOUT_MS, 0);
+        port = SerialPort.getCommPort(portName);
+        port.setBaudRate(BAUD_RATE);
+        port.setNumDataBits(DATA_BITS);
+        port.setNumStopBits(STOP_BITS);
+        port.setParity(PARITY);
+        port.setComPortTimeouts(SerialPort.TIMEOUT_READ_SEMI_BLOCKING, TIMEOUT_MS, 0);
 
-        if (!porta.openPort()) {
-            notificarStatus("ERRO: Não foi possível abrir " + nomePorta);
+        if (!port.openPort()) {
+            notifyStatus("ERROR: Could not open " + portName);
             return false;
         }
 
-        // Aguarda Arduino reiniciar após abertura da porta (auto-reset)
         try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
 
-        rodando = true;
-        threadLeitura = new Thread(this::loopLeitura, "serial-reader");
-        threadLeitura.setDaemon(true);
-        threadLeitura.start();
+        running    = true;
+        readThread = new Thread(this::readLoop, "serial-reader");
+        readThread.setDaemon(true);
+        readThread.start();
 
-        notificarStatus("CONECTADO: " + nomePorta);
+        notifyStatus("CONNECTED: " + portName);
         return true;
     }
 
-    // ─── Desconectar ─────────────────────────────────────────────────
-    public void desconectar() {
-        rodando = false;
-        if (threadLeitura != null) {
-            threadLeitura.interrupt();
-            threadLeitura = null;
+    /**
+     * Closes the serial port and stops the background read thread.
+     */
+    public void disconnect() {
+        running = false;
+
+        if (readThread != null) {
+            readThread.interrupt();
+            readThread = null;
         }
-        if (porta != null && porta.isOpen()) {
-            porta.closePort();
+        if (port != null && port.isOpen()) {
+            port.closePort();
         }
-        porta = null;
-        notificarStatus("DESCONECTADO");
+
+        port = null;
+        notifyStatus("DISCONNECTED");
     }
 
-    public boolean isConectado() {
-        return porta != null && porta.isOpen() && rodando;
+    /**
+     * @return {@code true} if the port is currently open and the read loop is active
+     */
+    public boolean isConnected() {
+        return port != null && port.isOpen() && running;
     }
 
-    // ─── Loop de leitura (thread background) ─────────────────────────
-    private void loopLeitura() {
+    private void readLoop() {
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(porta.getInputStream()))) {
+                new InputStreamReader(port.getInputStream()))) {
 
-            String linha;
-            while (rodando && (linha = reader.readLine()) != null) {
-                SensorData dados = SensorData.fromCsv(linha);
-                if (dados != null) {
-                    notificarDados(dados);
+            String line;
+            while (running && (line = reader.readLine()) != null) {
+                SensorData data = SensorData.fromCsv(line);
+                if (data != null) {
+                    notifyData(data);
                 }
             }
         } catch (Exception e) {
-            if (rodando) {
-                notificarStatus("ERRO: " + e.getMessage());
+            if (running) {
+                notifyStatus("ERROR: " + e.getMessage());
             }
         } finally {
-            if (rodando) {
-                rodando = false;
-                notificarStatus("DESCONECTADO: conexão perdida");
+            if (running) {
+                running = false;
+                notifyStatus("DISCONNECTED: connection lost");
             }
         }
     }
 
-    // ─── Notificações ────────────────────────────────────────────────
-    private void notificarDados(SensorData dados) {
-        for (Consumer<SensorData> l : dadosListeners) {
-            l.accept(dados);
+    private void notifyData(SensorData data) {
+        for (Consumer<SensorData> l : dataListeners) {
+            l.accept(data);
         }
     }
 
-    private void notificarStatus(String msg) {
+    private void notifyStatus(String msg) {
         for (Consumer<String> l : statusListeners) {
             l.accept(msg);
         }

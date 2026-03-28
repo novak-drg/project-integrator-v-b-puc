@@ -1,7 +1,6 @@
 package br.pucgoias.monitoramento.view;
 
 import br.pucgoias.monitoramento.model.SensorData;
-import br.pucgoias.monitoramento.service.SerialService;
 import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
@@ -13,267 +12,276 @@ import java.util.List;
 import java.util.function.Consumer;
 
 /**
- * MainView — interface gráfica principal (Swing + FlatLaf Dark).
+ * Main application window (Swing + FlatLaf Dark theme).
  *
- * Exibe em tempo real:
- *   - Temperatura (°C)
- *   - Umidade (%)
- *   - Luminosidade (valor 0–1023 + descrição)
- *   - Status de conexão serial
- *   - Seleção de porta COM
- *
- * Projeto Integrador V-B — PUC Goiás — ADS 2026
+ * <p>Displays in real-time:
+ * <ul>
+ *   <li>Temperature (°C)</li>
+ *   <li>Humidity (%)</li>
+ *   <li>Luminosity (raw 0–1023 + label)</li>
+ *   <li>Serial connection status</li>
+ *   <li>COM port selector</li>
+ * </ul>
  */
 public class MainView extends JFrame {
 
-    // ─── Cores do tema ───────────────────────────────────────────────
-    private static final Color COR_FUNDO       = new Color(30, 30, 46);
-    private static final Color COR_PAINEL      = new Color(49, 50, 68);
-    private static final Color COR_TEMP        = new Color(243, 139, 168);  // rosa
-    private static final Color COR_UMID        = new Color(137, 220, 235);  // azul claro
-    private static final Color COR_LUX         = new Color(249, 226, 175);  // amarelo
-    private static final Color COR_STATUS_OK   = new Color(166, 227, 161);  // verde
-    private static final Color COR_STATUS_ERR  = new Color(243, 139, 168);  // vermelho
-    private static final Font  FONTE_VALOR     = new Font("Segoe UI", Font.BOLD, 48);
-    private static final Font  FONTE_UNIDADE   = new Font("Segoe UI", Font.PLAIN, 16);
-    private static final Font  FONTE_LABEL     = new Font("Segoe UI", Font.BOLD, 12);
+    private static final Color COLOR_BG        = new Color(30, 30, 46);
+    private static final Color COLOR_PANEL     = new Color(49, 50, 68);
+    private static final Color COLOR_TEMP      = new Color(243, 139, 168);
+    private static final Color COLOR_HUMID     = new Color(137, 220, 235);
+    private static final Color COLOR_LUX       = new Color(249, 226, 175);
+    private static final Color COLOR_STATUS_OK = new Color(166, 227, 161);
+    private static final Color COLOR_STATUS_ERR= new Color(243, 139, 168);
 
-    // ─── Componentes de dados ────────────────────────────────────────
-    private final JLabel lblTempValor    = criarLabelValor("--", COR_TEMP);
-    private final JLabel lblUmidValor    = criarLabelValor("--", COR_UMID);
-    private final JLabel lblLuxValor     = criarLabelValor("--", COR_LUX);
-    private final JLabel lblLuxDesc      = new JLabel("Aguardando...");
-    private final JLabel lblStatus       = new JLabel("● Desconectado");
-    private final JLabel lblUltimaLeitura = new JLabel("Última leitura: —");
+    private static final Font FONT_VALUE = new Font("Segoe UI", Font.BOLD, 48);
+    private static final Font FONT_UNIT  = new Font("Segoe UI", Font.PLAIN, 16);
+    private static final Font FONT_LABEL = new Font("Segoe UI", Font.BOLD, 12);
 
-    // ─── Controles de conexão ────────────────────────────────────────
-    private final JComboBox<String> cmbPortas   = new JComboBox<>();
-    private final JButton           btnConectar = new JButton("Conectar");
-    private final JButton           btnAtualizar = new JButton("↻");
+    private final JLabel lblTempValue   = createValueLabel("--", COLOR_TEMP);
+    private final JLabel lblHumidValue  = createValueLabel("--", COLOR_HUMID);
+    private final JLabel lblLuxValue    = createValueLabel("--", COLOR_LUX);
+    private final JLabel lblLuxDesc     = new JLabel("Waiting...");
+    private final JLabel lblStatus      = new JLabel("● Disconnected");
+    private final JLabel lblLastReading = new JLabel("Last reading: —");
 
-    // ─── Callback externo ────────────────────────────────────────────
-    private Consumer<String>  onConectar;
-    private Consumer<String>  onDesconectar;
-    private Runnable          onAtualizarPortas;
+    private final JComboBox<String> cmbPorts  = new JComboBox<>();
+    private final JButton           btnConnect = new JButton("Connect");
+    private final JButton           btnRefresh = new JButton("↻");
 
-    // ─────────────────────────────────────────────────────────────────
+    private Consumer<String> onConnect;
+    private Consumer<String> onDisconnect;
+    private Runnable         onRefreshPorts;
+
     public MainView() {
-        super("Monitoramento de Ambientes — PI V-B | PUC Goiás");
-        configurarLookAndFeel();
-        configurarJanela();
-        construirUI();
+        super("Environment Monitoring — PI V-B | PUC Goiás");
+        setupLookAndFeel();
+        setupWindow();
+        buildUI();
     }
 
-    // ─── Setup ───────────────────────────────────────────────────────
-    private void configurarLookAndFeel() {
+    private void setupLookAndFeel() {
         try {
             UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception e) {
-            // fallback para look padrão
-        }
+        } catch (Exception ignored) {}
     }
 
-    private void configurarJanela() {
+    private void setupWindow() {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setMinimumSize(new Dimension(750, 500));
         setPreferredSize(new Dimension(900, 580));
-        getContentPane().setBackground(COR_FUNDO);
+        getContentPane().setBackground(COLOR_BG);
         setLayout(new BorderLayout(10, 10));
 
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                if (onDesconectar != null) onDesconectar.accept("");
+                if (onDisconnect != null) onDisconnect.accept("");
                 dispose();
                 System.exit(0);
             }
         });
     }
 
-    // ─── Construção da UI ────────────────────────────────────────────
-    private void construirUI() {
-        add(criarCabecalho(),   BorderLayout.NORTH);
-        add(criarPainelDados(), BorderLayout.CENTER);
-        add(criarRodape(),      BorderLayout.SOUTH);
+    private void buildUI() {
+        add(buildHeader(),    BorderLayout.NORTH);
+        add(buildDataPanel(), BorderLayout.CENTER);
+        add(buildFooter(),    BorderLayout.SOUTH);
         pack();
         setLocationRelativeTo(null);
     }
 
-    private JPanel criarCabecalho() {
-        JPanel painel = new JPanel(new BorderLayout(8, 0));
-        painel.setBackground(COR_PAINEL);
-        painel.setBorder(new EmptyBorder(12, 16, 12, 16));
+    private JPanel buildHeader() {
+        JPanel panel = new JPanel(new BorderLayout(8, 0));
+        panel.setBackground(COLOR_PANEL);
+        panel.setBorder(new EmptyBorder(12, 16, 12, 16));
 
-        // Título
-        JLabel titulo = new JLabel("🏠  Monitoramento de Ambientes Inteligentes");
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 17));
-        titulo.setForeground(Color.WHITE);
+        JLabel title = new JLabel("🏠  Smart Environment Monitoring");
+        title.setFont(new Font("Segoe UI", Font.BOLD, 17));
+        title.setForeground(Color.WHITE);
 
-        // Status
-        lblStatus.setFont(FONTE_LABEL);
-        lblStatus.setForeground(COR_STATUS_ERR);
+        lblStatus.setFont(FONT_LABEL);
+        lblStatus.setForeground(COLOR_STATUS_ERR);
 
-        painel.add(titulo,     BorderLayout.WEST);
-        painel.add(lblStatus,  BorderLayout.EAST);
-        return painel;
+        panel.add(title,     BorderLayout.WEST);
+        panel.add(lblStatus, BorderLayout.EAST);
+        return panel;
     }
 
-    private JPanel criarPainelDados() {
-        JPanel painel = new JPanel(new GridLayout(1, 3, 12, 0));
-        painel.setBackground(COR_FUNDO);
-        painel.setBorder(new EmptyBorder(16, 16, 8, 16));
+    private JPanel buildDataPanel() {
+        JPanel panel = new JPanel(new GridLayout(1, 3, 12, 0));
+        panel.setBackground(COLOR_BG);
+        panel.setBorder(new EmptyBorder(16, 16, 8, 16));
 
-        painel.add(criarCardSensor("🌡️  Temperatura", lblTempValor, "°C", COR_TEMP));
-        painel.add(criarCardSensor("💧  Umidade",     lblUmidValor, "%",  COR_UMID));
-        painel.add(criarCardLux());
-
-        return painel;
+        panel.add(buildSensorCard("🌡️  Temperature", lblTempValue,  "°C", COLOR_TEMP));
+        panel.add(buildSensorCard("💧  Humidity",    lblHumidValue, "%",  COLOR_HUMID));
+        panel.add(buildLuxCard());
+        return panel;
     }
 
-    private JPanel criarCardSensor(String titulo, JLabel lblValor, String unidade, Color cor) {
+    private JPanel buildSensorCard(String title, JLabel valueLabel, String unit, Color color) {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(COR_PAINEL);
+        card.setBackground(COLOR_PANEL);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(cor.darker(), 1),
+                BorderFactory.createLineBorder(color.darker(), 1),
                 new EmptyBorder(20, 20, 20, 20)));
 
-        JLabel lblTitulo  = new JLabel(titulo);
-        lblTitulo.setFont(FONTE_LABEL);
-        lblTitulo.setForeground(cor);
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(FONT_LABEL);
+        lblTitle.setForeground(color);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblValor.setAlignmentX(Component.CENTER_ALIGNMENT);
+        valueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblUn = new JLabel(unidade);
-        lblUn.setFont(FONTE_UNIDADE);
-        lblUn.setForeground(Color.LIGHT_GRAY);
-        lblUn.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel lblUnit = new JLabel(unit);
+        lblUnit.setFont(FONT_UNIT);
+        lblUnit.setForeground(Color.LIGHT_GRAY);
+        lblUnit.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         card.add(Box.createVerticalGlue());
-        card.add(lblTitulo);
+        card.add(lblTitle);
         card.add(Box.createVerticalStrut(12));
-        card.add(lblValor);
-        card.add(lblUn);
+        card.add(valueLabel);
+        card.add(lblUnit);
         card.add(Box.createVerticalGlue());
         return card;
     }
 
-    private JPanel criarCardLux() {
+    private JPanel buildLuxCard() {
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(COR_PAINEL);
+        card.setBackground(COLOR_PANEL);
         card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(COR_LUX.darker(), 1),
+                BorderFactory.createLineBorder(COLOR_LUX.darker(), 1),
                 new EmptyBorder(20, 20, 20, 20)));
 
-        JLabel lblTitulo = new JLabel("☀️  Luminosidade");
-        lblTitulo.setFont(FONTE_LABEL);
-        lblTitulo.setForeground(COR_LUX);
-        lblTitulo.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel lblTitle = new JLabel("☀️  Luminosity");
+        lblTitle.setFont(FONT_LABEL);
+        lblTitle.setForeground(COLOR_LUX);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblLuxValor.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblLuxValue.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblLuxDesc.setFont(FONTE_UNIDADE);
+        lblLuxDesc.setFont(FONT_UNIT);
         lblLuxDesc.setForeground(Color.LIGHT_GRAY);
         lblLuxDesc.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         card.add(Box.createVerticalGlue());
-        card.add(lblTitulo);
+        card.add(lblTitle);
         card.add(Box.createVerticalStrut(12));
-        card.add(lblLuxValor);
+        card.add(lblLuxValue);
         card.add(lblLuxDesc);
         card.add(Box.createVerticalGlue());
         return card;
     }
 
-    private JPanel criarRodape() {
-        JPanel painel = new JPanel(new BorderLayout(8, 0));
-        painel.setBackground(COR_PAINEL);
-        painel.setBorder(new EmptyBorder(8, 16, 12, 16));
+    private JPanel buildFooter() {
+        JPanel panel = new JPanel(new BorderLayout(8, 0));
+        panel.setBackground(COLOR_PANEL);
+        panel.setBorder(new EmptyBorder(8, 16, 12, 16));
 
-        // Painel esquerdo — seleção de porta
-        JPanel esquerda = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        esquerda.setBackground(COR_PAINEL);
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        leftPanel.setBackground(COLOR_PANEL);
 
-        JLabel lblPorta = new JLabel("Porta:");
-        lblPorta.setForeground(Color.LIGHT_GRAY);
-        lblPorta.setFont(FONTE_LABEL);
+        JLabel lblPort = new JLabel("Port:");
+        lblPort.setForeground(Color.LIGHT_GRAY);
+        lblPort.setFont(FONT_LABEL);
 
-        cmbPortas.setPreferredSize(new Dimension(120, 28));
-        btnConectar.setPreferredSize(new Dimension(110, 28));
-        btnAtualizar.setPreferredSize(new Dimension(36, 28));
-        btnAtualizar.setToolTipText("Atualizar lista de portas");
+        cmbPorts.setPreferredSize(new Dimension(120, 28));
+        btnConnect.setPreferredSize(new Dimension(110, 28));
+        btnRefresh.setPreferredSize(new Dimension(36, 28));
+        btnRefresh.setToolTipText("Refresh port list");
 
-        btnConectar.addActionListener(e -> aoClicarConectar());
-        btnAtualizar.addActionListener(e -> { if (onAtualizarPortas != null) onAtualizarPortas.run(); });
+        btnConnect.addActionListener(e -> onConnectClicked());
+        btnRefresh.addActionListener(e -> { if (onRefreshPorts != null) onRefreshPorts.run(); });
 
-        esquerda.add(lblPorta);
-        esquerda.add(cmbPortas);
-        esquerda.add(btnAtualizar);
-        esquerda.add(btnConectar);
+        leftPanel.add(lblPort);
+        leftPanel.add(cmbPorts);
+        leftPanel.add(btnRefresh);
+        leftPanel.add(btnConnect);
 
-        // Painel direito — última leitura
-        lblUltimaLeitura.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-        lblUltimaLeitura.setForeground(Color.GRAY);
+        lblLastReading.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        lblLastReading.setForeground(Color.GRAY);
 
-        painel.add(esquerda,          BorderLayout.WEST);
-        painel.add(lblUltimaLeitura,  BorderLayout.EAST);
-        return painel;
+        panel.add(leftPanel,      BorderLayout.WEST);
+        panel.add(lblLastReading, BorderLayout.EAST);
+        return panel;
     }
 
-    // ─── Ações ───────────────────────────────────────────────────────
-    private void aoClicarConectar() {
-        String txt = btnConectar.getText();
-        String porta = (String) cmbPortas.getSelectedItem();
-        if (porta == null) return;
+    private void onConnectClicked() {
+        String text = btnConnect.getText();
+        String port = (String) cmbPorts.getSelectedItem();
+        if (port == null) return;
 
-        if ("Conectar".equals(txt)) {
-            if (onConectar != null) onConectar.accept(porta);
+        if ("Connect".equals(text)) {
+            if (onConnect != null) onConnect.accept(port);
         } else {
-            if (onDesconectar != null) onDesconectar.accept(porta);
+            if (onDisconnect != null) onDisconnect.accept(port);
         }
     }
 
-    // ─── Atualização de dados (deve ser chamada na EDT) ──────────────
-    public void atualizarDados(SensorData dados) {
-        lblTempValor.setText(String.valueOf(dados.getTemperatura()));
-        lblUmidValor.setText(String.valueOf(dados.getUmidade()));
-        lblLuxValor.setText(String.valueOf(dados.getLuminosidade()));
-        lblLuxDesc.setText(dados.getLuminosidadeDescricao());
-        lblUltimaLeitura.setText("Última leitura: " +
+    /**
+     * Updates all sensor value labels. Must be called on the EDT.
+     *
+     * @param data the latest sensor reading
+     */
+    public void updateData(SensorData data) {
+        lblTempValue.setText(String.valueOf(data.getTemperature()));
+        lblHumidValue.setText(String.valueOf(data.getHumidity()));
+        lblLuxValue.setText(String.valueOf(data.getLuminosity()));
+        lblLuxDesc.setText(data.getLuminosityDescription());
+        lblLastReading.setText("Last reading: " +
                 new java.text.SimpleDateFormat("HH:mm:ss").format(
-                        new java.util.Date(dados.getTimestamp())));
+                        new java.util.Date(data.getTimestamp())));
     }
 
+    /**
+     * Updates the connection status indicator. Must be called on the EDT.
+     *
+     * @param msg status message from {@link br.pucgoias.monitoramento.service.SerialService}
+     */
     public void setStatus(String msg) {
         lblStatus.setText("● " + msg);
-        boolean ok = msg.startsWith("CONECTADO");
-        lblStatus.setForeground(ok ? COR_STATUS_OK : COR_STATUS_ERR);
-        btnConectar.setText(ok ? "Desconectar" : "Conectar");
-        cmbPortas.setEnabled(!ok);
-        btnAtualizar.setEnabled(!ok);
+        boolean ok = msg.startsWith("CONNECTED");
+        lblStatus.setForeground(ok ? COLOR_STATUS_OK : COLOR_STATUS_ERR);
+        btnConnect.setText(ok ? "Disconnect" : "Connect");
+        cmbPorts.setEnabled(!ok);
+        btnRefresh.setEnabled(!ok);
     }
 
-    public void setPortas(List<String> portas) {
-        cmbPortas.removeAllItems();
-        if (portas.isEmpty()) {
-            cmbPortas.addItem("(Nenhuma porta)");
+    /**
+     * Populates the port combo box. Must be called on the EDT.
+     *
+     * @param ports list of available port names
+     */
+    public void setPorts(List<String> ports) {
+        cmbPorts.removeAllItems();
+        if (ports.isEmpty()) {
+            cmbPorts.addItem("(No ports available)");
         } else {
-            portas.forEach(cmbPortas::addItem);
+            ports.forEach(cmbPorts::addItem);
         }
     }
 
-    // ─── Callbacks externos (definidos pelo Controller) ──────────────
-    public void setOnConectar(Consumer<String> cb)    { this.onConectar = cb; }
-    public void setOnDesconectar(Consumer<String> cb) { this.onDesconectar = cb; }
-    public void setOnAtualizarPortas(Runnable cb)     { this.onAtualizarPortas = cb; }
+    /**
+     * @param cb callback invoked with the selected port name when Connect is clicked
+     */
+    public void setOnConnect(Consumer<String> cb)    { this.onConnect = cb; }
 
-    // ─── Utilitários ─────────────────────────────────────────────────
-    private JLabel criarLabelValor(String texto, Color cor) {
-        JLabel l = new JLabel(texto, SwingConstants.CENTER);
-        l.setFont(FONTE_VALOR);
-        l.setForeground(cor);
-        return l;
+    /**
+     * @param cb callback invoked with the selected port name when Disconnect is clicked
+     */
+    public void setOnDisconnect(Consumer<String> cb) { this.onDisconnect = cb; }
+
+    /**
+     * @param cb callback invoked when the port refresh button is clicked
+     */
+    public void setOnRefreshPorts(Runnable cb)       { this.onRefreshPorts = cb; }
+
+    private JLabel createValueLabel(String text, Color color) {
+        JLabel label = new JLabel(text, SwingConstants.CENTER);
+        label.setFont(FONT_VALUE);
+        label.setForeground(color);
+        return label;
     }
 }

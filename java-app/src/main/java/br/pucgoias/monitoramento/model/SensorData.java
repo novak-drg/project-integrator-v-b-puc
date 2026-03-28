@@ -1,75 +1,82 @@
 package br.pucgoias.monitoramento.model;
 
 /**
- * Model — dados capturados de uma leitura dos sensores.
+ * Represents a single sensor reading received from the Arduino via serial.
  *
- * Representa uma linha CSV recebida do Arduino no formato:
- *   temperatura,umidade,luminosidade
+ * <p>Data arrives in CSV format: {@code temperature,humidity,luminosity}
  *
- * Projeto Integrador V-B — PUC Goiás — ADS 2026
+ * @see #fromCsv(String)
  */
 public class SensorData {
 
-    // ─── Atributos ───────────────────────────────────────────────────
-    private final int    temperatura;   // °C
-    private final int    umidade;       // % relativo
-    private final int    luminosidade;  // 0–1023 (valor analógico LDR)
-    private final long   timestamp;     // System.currentTimeMillis()
-
-    // ─── Construtor ──────────────────────────────────────────────────
-    public SensorData(int temperatura, int umidade, int luminosidade) {
-        this.temperatura  = temperatura;
-        this.umidade      = umidade;
-        this.luminosidade = luminosidade;
-        this.timestamp    = System.currentTimeMillis();
-    }
-
-    // ─── Getters ─────────────────────────────────────────────────────
-    public int  getTemperatura()  { return temperatura;  }
-    public int  getUmidade()      { return umidade;      }
-    public int  getLuminosidade() { return luminosidade; }
-    public long getTimestamp()    { return timestamp;    }
+    private final int  temperature;
+    private final int  humidity;
+    private final int  luminosity;
+    private final long timestamp;
 
     /**
-     * Converte luminosidade (0–1023) para percentual descritivo.
-     * Usado na UI para exibição amigável.
+     * @param temperature temperature in degrees Celsius
+     * @param humidity    relative humidity percentage (0–100)
+     * @param luminosity  raw LDR analog value (0–1023)
      */
-    public String getLuminosidadeDescricao() {
-        if (luminosidade < 200)  return "Muito escuro";
-        if (luminosidade < 500)  return "Meia-luz";
-        if (luminosidade < 800)  return "Claro";
-        return "Muito claro";
+    public SensorData(int temperature, int humidity, int luminosity) {
+        this.temperature = temperature;
+        this.humidity    = humidity;
+        this.luminosity  = luminosity;
+        this.timestamp   = System.currentTimeMillis();
     }
 
+    /** @return temperature in °C */
+    public int  getTemperature() { return temperature; }
+
+    /** @return relative humidity (0–100 %) */
+    public int  getHumidity()    { return humidity;    }
+
+    /** @return raw LDR value (0–1023) */
+    public int  getLuminosity()  { return luminosity;  }
+
+    /** @return reading timestamp (epoch ms) */
+    public long getTimestamp()   { return timestamp;   }
+
     /**
-     * Parseia uma linha CSV do Arduino.
-     * Retorna null se a linha for inválida (heartbeat, erro, etc.).
+     * Returns a human-readable luminosity label based on the raw LDR value.
      *
-     * @param linha  linha bruta do Serial (ex: "25,60,512")
-     * @return SensorData ou null
+     * @return descriptive string (e.g. {@code "Bright"})
      */
-    public static SensorData fromCsv(String linha) {
-        if (linha == null) return null;
-        String s = linha.trim();
-        // Ignorar linhas de heartbeat/erro
-        if (s.isEmpty() || s.startsWith("SISTEMA") || s.startsWith("ERR")) return null;
+    public String getLuminosityDescription() {
+        if (luminosity < 200) return "Very dark";
+        if (luminosity < 500) return "Dim";
+        if (luminosity < 800) return "Bright";
+        return "Very bright";
+    }
 
-        String[] partes = s.split(",");
-        if (partes.length < 3) return null;
+    /**
+     * Parses a raw CSV line from the Arduino serial stream.
+     *
+     * @param line raw serial line (e.g. {@code "25,60,512"})
+     * @return parsed {@link SensorData}, or {@code null} if the line is invalid
+     */
+    public static SensorData fromCsv(String line) {
+        if (line == null) return null;
+        String raw = line.trim();
+        if (raw.isEmpty() || raw.startsWith("SISTEMA") || raw.startsWith("ERR")) return null;
+
+        String[] parts = raw.split(",");
+        if (parts.length < 3) return null;
 
         try {
-            int temp = Integer.parseInt(partes[0].trim());
-            int umid = Integer.parseInt(partes[1].trim());
-            int lux  = Integer.parseInt(partes[2].trim());
-            return new SensorData(temp, umid, lux);
+            int temp  = Integer.parseInt(parts[0].trim());
+            int humid = Integer.parseInt(parts[1].trim());
+            int lux   = Integer.parseInt(parts[2].trim());
+            return new SensorData(temp, humid, lux);
         } catch (NumberFormatException e) {
-            return null;  // linha malformada — ignorar
+            return null;
         }
     }
 
     @Override
     public String toString() {
-        return String.format("SensorData{temp=%d°C, umid=%d%%, lux=%d}",
-                temperatura, umidade, luminosidade);
+        return String.format("SensorData{temp=%d°C, humid=%d%%, lux=%d}",
+                temperature, humidity, luminosity);
     }
 }
