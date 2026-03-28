@@ -57,9 +57,9 @@ public class AppController {
                 boolean ok = serialService.connect(port);
                 if (!ok) {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(view,
-                            "Could not connect to port " + port + ".\n" +
-                            "Ensure the Arduino is connected and the correct port is selected.",
-                            "Connection Error",
+                            "Não foi possível conectar à porta " + port + ".\n" +
+                            "Verifique se o Arduino está conectado e a porta correta está selecionada.",
+                            "Erro de Conexão",
                             JOptionPane.ERROR_MESSAGE));
                 }
             }
