@@ -62,8 +62,12 @@ public class SerialService {
      */
     public static List<String> listPorts() {
         List<String> names = new ArrayList<>();
-        for (SerialPort p : SerialPort.getCommPorts()) {
-            names.add(p.getSystemPortName());
+        try {
+            for (SerialPort p : SerialPort.getCommPorts()) {
+                names.add(p.getSystemPortName());
+            }
+        } catch (Throwable ignored) {
+            /* Native library unavailable — return empty list so DEMO mode still works */
         }
         return names;
     }
