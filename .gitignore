@@ -1,0 +1,35 @@
+# .gitignore — PI-V-B Monitoramento Ambiental
+
+# Maven
+java-app/target/
+java-app/.mvn/repository/
+*.class
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Arquivos temporários
+*.tmp
+*.bak
+*.swp
+
+# Manter pasta screenshots vazia no git
+ui-prototype/screenshots/*
+!ui-prototype/screenshots/.gitkeep
+arduino/screenshots/*
+!arduino/screenshots/.gitkeep
+uml/*.png
