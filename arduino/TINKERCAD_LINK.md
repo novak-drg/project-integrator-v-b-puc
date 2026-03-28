@@ -1,19 +1,45 @@
-# Link Tinkercad — PI-V-B Monitoramento Ambiental
+# Link da Simulação — Tinkercad
 
-**Projeto:** PI-V-B — Monitoramento Ambiental
-**Link público:** _(cole o link aqui após criar no Tinkercad)_
-**Data criação:** ___________
+**Projeto:** PI-V-B — Monitoramento Ambiental  
+**Plataforma:** Tinkercad (Autodesk)  
+**Link público:** https://www.tinkercad.com/things/eALbQIdph4d-pi-v-b-monitoramento-ambiental
+
+## Componentes do Circuito
+
+| Componente | Função | Pino Arduino |
+|-----------|--------|-------------|
+| TMP36 | Sensor analógico de temperatura (°C) | A1 |
+| Fotorresistor (LDR) + Resistor 10kΩ | Divisor de tensão para luminosidade | A0 |
+| Potenciômetro | Simula umidade relativa do ar (0–100%) | A2 |
+| Arduino UNO R3 | Microcontrolador + comunicação serial | — |
+
+## Protocolo Serial
+
+- **Baud rate:** 9600 bps  
+- **Formato:** `temperatura,umidade,luminosidade\n`  
+- **Exemplo real:** `24,38,81`
+
+## Output do Serial Monitor (verificado)
+
+```
+SISTEMA,INICIADO,0
+24,38,969
+24,38,81
+81,30,81
+```
 
 ## Screenshots
 
-- `screenshots/circuito.png` — Circuito montado no Tinkercad
-- `screenshots/serial-monitor.png` — Serial Monitor com leituras CSV
+- `screenshots/circuito.png` — Circuito completo com conexões
+- `screenshots/simulacao.png` — Simulação ativa com Serial Monitor
 
-## Checklist de entrega
+## Instruções para replicar
 
-- [ ] Circuito montado com Arduino UNO + DHT11 + LDR
-- [ ] Código `sketch.ino` colado e compilando sem erros
-- [ ] Simulação iniciada — Serial Monitor mostra dados
-- [ ] Screenshot do circuito capturado
-- [ ] Screenshot do Serial Monitor capturado
-- [ ] Link público copiado e colado acima
+1. Acesse o link acima
+2. Clique em **"Abrir no Tinkercad"** e faça login
+3. Clique em **"Iniciar Simulação"**
+4. Abra o **Monitor Serial** para ver os dados em tempo real
+5. Interaja com os componentes:
+   - Gire o **potenciômetro** para variar a umidade
+   - Clique no **LDR** e ajuste o slider de luz para variar a luminosidade
+   - Clique no **TMP36** e ajuste o slider de temperatura

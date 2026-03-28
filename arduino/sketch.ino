@@ -3,40 +3,38 @@
  * Projeto Integrador V-B — PUC Goiás — ADS 2026
  * Professor: Thalles Bruno G. N. dos Santos
  *
- * Hardware:
+ * Hardware (Tinkercad-compatível):
  *   - Arduino UNO R3
- *   - DHT11 (temperatura e umidade) — Pino Digital 2
- *   - LDR / fotoresistor — Pino Analógico A0 (divisor com resistor 10kΩ)
+ *   - TMP36 (temperatura) → Pino Analógico A1
+ *   - LDR / fotoresistor (luminosidade) → Pino Analógico A0 (divisor com resistor 10kΩ)
+ *   - Potenciômetro (simula umidade) → Pino Analógico A2
  *
  * Protocolo serial: 9600 bps, CSV com newline
  *   Formato: temperatura,umidade,luminosidade
  *   Exemplo: 25,60,512
  *
  * Pinagem:
- *   Pin 2  → DHT11 Data
- *   A0     → LDR (divisor de tensão: LDR → A0 + 10kΩ → GND)
- *   5V     → DHT11 VCC + LDR leg1
- *   GND    → DHT11 GND + resistor 10kΩ
+ *   A0 → LDR (divisor de tensão: LDR → A0 + 10kΩ → GND)
+ *   A1 → TMP36 Vout (perna central)
+ *   A2 → Potenciômetro pino central
+ *   5V → TMP36 +V + LDR leg1 + Potenciômetro 5V
+ *   GND → TMP36 GND + Resistor 10kΩ + Potenciômetro GND
  */
 
-#include <DHT11.h>
-
 // ─── Configuração de pinos ───────────────────────────────────────────
-const int  DHT_PIN   = 2;    // Pino digital — DHT11
-const int  LDR_PIN   = A0;   // Pino analógico — LDR
+const int TEMP_PIN = A1;   // TMP36 — saída de tensão analógica
+const int LDR_PIN  = A0;   // Fotorresistor (LDR) — divisor de tensão
+const int UMID_PIN = A2;   // Potenciômetro — simula umidade relativa
 
 // ─── Intervalo de leitura (ms) ───────────────────────────────────────
 const unsigned long INTERVALO = 2000UL;   // 2 segundos
 
 // ─── Variáveis de estado ─────────────────────────────────────────────
-DHT11          dht11(DHT_PIN);
-unsigned long  ultimaLeitura = 0;
+unsigned long ultimaLeitura = 0;
 
 // ─────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
-  // Aguarda Serial estar pronta (necessário para algumas placas)
-  while (!Serial) { ; }
   // Heartbeat de inicialização (ignorado pelo Java com .trim())
   Serial.println("SISTEMA,INICIADO,0");
 }
@@ -48,29 +46,27 @@ void loop() {
   if (agora - ultimaLeitura >= INTERVALO) {
     ultimaLeitura = agora;
 
-    // ── Leitura DHT11 ────────────────────────────────────────────────
-    int temperatura = 0;
-    int umidade     = 0;
-    int resultado   = dht11.readTemperatureHumidity(temperatura, umidade);
+    // ── Leitura TMP36 ────────────────────────────────────────────────
+    // TMP36: 10mV por grau Celsius, 500mV = 0°C
+    // Fórmula: Temperatura (°C) = (Tensão - 0.5V) × 100
+    int leituraTemp  = analogRead(TEMP_PIN);
+    float tensao     = leituraTemp * (5.0 / 1023.0);
+    int temperatura  = (int)((tensao - 0.5) * 100.0);
+
+    // ── Leitura Potenciômetro (umidade simulada) ─────────────────────
+    // Mapeia 0-1023 para 0-100% de umidade relativa
+    int leituraUmid = analogRead(UMID_PIN);
+    int umidade     = map(leituraUmid, 0, 1023, 0, 100);
 
     // ── Leitura LDR ──────────────────────────────────────────────────
     int luminosidade = analogRead(LDR_PIN);  // 0 (escuro) – 1023 (claro)
 
     // ── Saída Serial ─────────────────────────────────────────────────
-    if (resultado == 0) {
-      // Leitura OK — emite CSV: temperatura,umidade,luminosidade
-      Serial.print(temperatura);
-      Serial.print(",");
-      Serial.print(umidade);
-      Serial.print(",");
-      Serial.println(luminosidade);
-    } else {
-      // Erro na leitura do DHT11 — emite indicador de erro
-      // O módulo Java ignora linhas que começam com "ERR"
-      Serial.print("ERR,");
-      Serial.print(resultado);
-      Serial.print(",");
-      Serial.println(luminosidade);
-    }
+    // Emite CSV: temperatura,umidade,luminosidade
+    Serial.print(temperatura);
+    Serial.print(",");
+    Serial.print(umidade);
+    Serial.print(",");
+    Serial.println(luminosidade);
   }
 }
