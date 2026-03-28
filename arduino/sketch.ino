@@ -1,72 +1,56 @@
-/*
- * Sistema de Monitoramento de Ambientes Inteligentes
+/**
+ * Smart Environment Monitoring System — Arduino Firmware
  * Projeto Integrador V-B — PUC Goiás — ADS 2026
- * Professor: Thalles Bruno G. N. dos Santos
  *
- * Hardware (Tinkercad-compatível):
+ * Hardware (Tinkercad-compatible):
  *   - Arduino UNO R3
- *   - TMP36 (temperatura) → Pino Analógico A1
- *   - LDR / fotoresistor (luminosidade) → Pino Analógico A0 (divisor com resistor 10kΩ)
- *   - Potenciômetro (simula umidade) → Pino Analógico A2
+ *   - TMP36  (temperature)  → Analog Pin A1
+ *   - LDR    (luminosity)   → Analog Pin A0 (voltage divider with 10kΩ resistor)
+ *   - Potentiometer (simulates humidity) → Analog Pin A2
  *
- * Protocolo serial: 9600 bps, CSV com newline
- *   Formato: temperatura,umidade,luminosidade
- *   Exemplo: 25,60,512
+ * Serial protocol: 9600 bps, CSV with newline
+ *   Format : temperature,humidity,luminosity
+ *   Example: 25,60,512
  *
- * Pinagem:
- *   A0 → LDR (divisor de tensão: LDR → A0 + 10kΩ → GND)
- *   A1 → TMP36 Vout (perna central)
- *   A2 → Potenciômetro pino central
- *   5V → TMP36 +V + LDR leg1 + Potenciômetro 5V
- *   GND → TMP36 GND + Resistor 10kΩ + Potenciômetro GND
+ * Wiring:
+ *   A0  → LDR  (voltage divider: LDR → A0, 10kΩ → GND)
+ *   A1  → TMP36 Vout (center pin)
+ *   A2  → Potentiometer wiper (center pin)
+ *   5V  → TMP36 +V, LDR leg 1, Potentiometer 5V
+ *   GND → TMP36 GND, 10kΩ resistor, Potentiometer GND
  */
 
-// ─── Configuração de pinos ───────────────────────────────────────────
-const int TEMP_PIN = A1;   // TMP36 — saída de tensão analógica
-const int LDR_PIN  = A0;   // Fotorresistor (LDR) — divisor de tensão
-const int UMID_PIN = A2;   // Potenciômetro — simula umidade relativa
+const int          TEMP_PIN = A1;
+const int          LDR_PIN  = A0;
+const int          HUMID_PIN = A2;
+const unsigned long READ_INTERVAL = 2000UL;
 
-// ─── Intervalo de leitura (ms) ───────────────────────────────────────
-const unsigned long INTERVALO = 2000UL;   // 2 segundos
+unsigned long lastRead = 0;
 
-// ─── Variáveis de estado ─────────────────────────────────────────────
-unsigned long ultimaLeitura = 0;
-
-// ─────────────────────────────────────────────────────────────────────
 void setup() {
   Serial.begin(9600);
-  // Heartbeat de inicialização (ignorado pelo Java com .trim())
   Serial.println("SISTEMA,INICIADO,0");
 }
 
-// ─────────────────────────────────────────────────────────────────────
 void loop() {
-  unsigned long agora = millis();
+  unsigned long now = millis();
 
-  if (agora - ultimaLeitura >= INTERVALO) {
-    ultimaLeitura = agora;
+  if (now - lastRead >= READ_INTERVAL) {
+    lastRead = now;
 
-    // ── Leitura TMP36 ────────────────────────────────────────────────
-    // TMP36: 10mV por grau Celsius, 500mV = 0°C
-    // Fórmula: Temperatura (°C) = (Tensão - 0.5V) × 100
-    int leituraTemp  = analogRead(TEMP_PIN);
-    float tensao     = leituraTemp * (5.0 / 1023.0);
-    int temperatura  = (int)((tensao - 0.5) * 100.0);
+    int   rawTemp    = analogRead(TEMP_PIN);
+    float voltage    = rawTemp * (5.0 / 1023.0);
+    int   temperature = (int)((voltage - 0.5) * 100.0);
 
-    // ── Leitura Potenciômetro (umidade simulada) ─────────────────────
-    // Mapeia 0-1023 para 0-100% de umidade relativa
-    int leituraUmid = analogRead(UMID_PIN);
-    int umidade     = map(leituraUmid, 0, 1023, 0, 100);
+    int rawHumid  = analogRead(HUMID_PIN);
+    int humidity  = map(rawHumid, 0, 1023, 0, 100);
 
-    // ── Leitura LDR ──────────────────────────────────────────────────
-    int luminosidade = analogRead(LDR_PIN);  // 0 (escuro) – 1023 (claro)
+    int luminosity = analogRead(LDR_PIN);
 
-    // ── Saída Serial ─────────────────────────────────────────────────
-    // Emite CSV: temperatura,umidade,luminosidade
-    Serial.print(temperatura);
+    Serial.print(temperature);
     Serial.print(",");
-    Serial.print(umidade);
+    Serial.print(humidity);
     Serial.print(",");
-    Serial.println(luminosidade);
+    Serial.println(luminosity);
   }
 }
