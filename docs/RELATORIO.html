@@ -246,12 +246,18 @@
 
   <h2>5.1 Circuito Arduino (Tinkercad)</h2>
   <p class="indent">O circuito foi projetado e testado na plataforma Tinkercad. O sketch Arduino (<code>arduino/sketch.ino</code>) implementa a leitura do sensor TMP36 (pino analógico A1), do LDR (pino analógico A0) com divisor de tensão de 10kΩ, e de um potenciômetro que simula a umidade relativa (pino analógico A2), transmitindo dados a cada 2 segundos via Serial a 9600 bps no formato CSV.</p>
+
+  <div class="img-container">
+    <img src="../arduino/screenshots/circuito.png" alt="Circuito Arduino no Tinkercad" style="max-width:95%">
+    <p class="img-caption">Figura 3 — Circuito montado no Tinkercad: Arduino UNO R3 + TMP36 + LDR + Potenciômetro</p>
+  </div>
+
   <p><strong>Link da simulação no Tinkercad:</strong> <a href="https://www.tinkercad.com/things/eALbQIdph4d-pi-v-b-monitoramento-ambiental">https://www.tinkercad.com/things/eALbQIdph4d-pi-v-b-monitoramento-ambiental</a></p>
 
   <h2>5.2 Módulo Java</h2>
   <p class="indent">O módulo Java foi implementado com sucesso e compilado via Apache Maven 3.9.6, gerando o JAR executável em <code>java-app/target/monitoramento-ambiental.jar</code>. A aplicação pode ser executada com o comando:</p>
   <p style="background:#f5f5f5;padding:6pt 10pt;font-family:monospace;font-size:10pt;margin:6pt 0 10pt;border-left:3px solid #ccc">java -jar java-app/target/monitoramento-ambiental.jar</p>
-  <p><strong>Repositório GitHub:</strong> <em>[Disponível no README.md]</em></p>
+  <p><strong>Repositório GitHub:</strong> <a href="https://github.com/novak-drg/project-integrator-v-b-puc">https://github.com/novak-drg/project-integrator-v-b-puc</a></p>
 
   <h2>5.3 Diagrama UML</h2>
   <p class="indent">O Diagrama de Classes UML (Figura 1) documenta a arquitetura completa do sistema Java, com as quatro classes, seus atributos, métodos e relacionamentos segundo o padrão MVC.</p>
