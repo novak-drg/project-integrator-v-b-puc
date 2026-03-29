@@ -30,8 +30,16 @@ SISTEMA,INICIADO,0
 
 ## Screenshots
 
-- `screenshots/circuito.png` — Circuito completo com conexões
-- `screenshots/simulacao.png` — Simulação ativa com Serial Monitor
+- `screenshots/circuito.png` — Circuito completo com conexões ✅
+- `screenshots/simulacao.png` — Simulação ativa com Serial Monitor _(opcional)_
+
+## Checklist
+
+- [x] Link público do Tinkercad salvo
+- [x] Circuito montado com TMP36, LDR e Potenciômetro
+- [x] Screenshot do circuito salva em `screenshots/circuito.png`
+- [x] Protocolo serial documentado (CSV, 9600 bps)
+- [x] Output do Serial Monitor registrado
 
 ## Instruções para replicar
 

@@ -2,354 +2,124 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Diagrama de Classes — Sistema de Monitoramento</title>
+<title>Diagrama de Classes — Monitoramento de Ambientes Inteligentes</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #f0f4f8;
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 36px 24px 40px;
-    min-height: 100vh;
-  }
-  h1 {
-    font-size: 16px;
-    font-weight: 700;
-    color: #1a202c;
-    margin-bottom: 4px;
-    letter-spacing: 0.3px;
-  }
-  .subtitle {
-    font-size: 11px;
-    color: #718096;
-    margin-bottom: 32px;
-    letter-spacing: 0.2px;
-  }
-
-  /* ── Diagram canvas ── */
-  .canvas {
-    display: grid;
-    grid-template-columns: 280px 220px 280px;
-    grid-template-rows: auto 60px auto;
-    gap: 0;
-    position: relative;
-    width: 900px;
-  }
-
-  /* ── Class box ── */
-  .cls {
     background: #ffffff;
-    border: 1.5px solid #2b6cb0;
-    border-radius: 6px;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.10);
-    font-size: 11.5px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 32px 24px 40px;
   }
-
-  .cls-header {
-    background: #2b6cb0;
-    color: #fff;
-    padding: 8px 12px;
-    text-align: center;
-  }
-  .cls-header .stereotype {
-    font-size: 9.5px;
-    font-style: italic;
-    color: #bee3f8;
-    display: block;
-    margin-bottom: 2px;
-  }
-  .cls-header .classname {
-    font-size: 13px;
-    font-weight: 700;
-    letter-spacing: 0.4px;
-  }
-  .cls-header .extends {
-    font-size: 9px;
-    color: #bee3f8;
-    display: block;
-    margin-top: 2px;
-  }
-
-  .cls-section {
-    border-top: 1px solid #bee3f8;
-    padding: 8px 12px;
-  }
-  .cls-section .section-title {
-    font-size: 9px;
-    font-weight: 700;
-    color: #4a5568;
-    text-transform: uppercase;
-    letter-spacing: 0.6px;
-    margin-bottom: 5px;
-  }
-  .field, .method {
-    font-family: 'Consolas', 'Courier New', monospace;
-    font-size: 10px;
-    color: #2d3748;
-    padding: 1.5px 0;
-    white-space: nowrap;
-  }
-  .vis-private  { color: #e53e3e; }
-  .vis-public   { color: #276749; }
-  .vis-static   { text-decoration: underline; }
-  .type-tag     { color: #2b6cb0; }
-  .method       { color: #553c9a; }
-  .method .vis-public { color: #276749; }
-
-  /* ── Spacer / arrows column ── */
-  .spacer-mid {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  /* ── Connector SVG ── */
-  .connectors {
-    position: absolute;
-    top: 0; left: 0;
-    width: 900px;
-    /* height set via JS or fixed */
-    pointer-events: none;
-  }
-
-  /* ── Layout positions ── */
-  .pos-topleft   { grid-column: 1; grid-row: 1; }
-  .pos-topmid    { grid-column: 2; grid-row: 1; display: flex; align-items: center; justify-content: center; }
-  .pos-topright  { grid-column: 3; grid-row: 1; }
-  .pos-midrow    { grid-column: 1 / 4; grid-row: 2; position: relative; }
-  .pos-botleft   { grid-column: 1; grid-row: 3; display: flex; align-items: flex-start; justify-content: center; }
-  .pos-botmid    { grid-column: 2; grid-row: 3; }
-  .pos-botright  { grid-column: 3; grid-row: 3; display: flex; align-items: flex-start; justify-content: center; }
-
-  /* Arrow label */
-  .arrow-label {
-    font-size: 9.5px;
-    color: #4a5568;
-    font-style: italic;
-    text-align: center;
-  }
-  .arrow-block {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 3px;
-  }
-  .arrow-svg { display: block; }
-
-  /* Legend */
+  h1 { font-size: 17px; font-weight: 700; color: #1a202c; text-align: center; margin-bottom: 4px; }
+  .subtitle { font-size: 11px; color: #718096; text-align: center; margin-bottom: 30px; }
+  #diagram-container { width: 100%; max-width: 1100px; display: flex; justify-content: center; }
+  .mermaid { width: 100%; }
   .legend {
-    display: flex;
-    gap: 20px;
-    margin-top: 28px;
-    padding: 10px 20px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    font-size: 10px;
-    color: #4a5568;
+    display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
+    margin-top: 28px; padding: 10px 22px;
+    background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px;
+    font-size: 10.5px; color: #4a5568;
   }
-  .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-line { width: 24px; height: 2px; }
-  .legend-line.assoc { background: #2b6cb0; }
-  .legend-line.dep   { background: #2b6cb0; border-top: 2px dashed #2b6cb0; height: 0; }
-  .legend-line.inh   { background: #276749; height: 2px; }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
 </style>
 </head>
 <body>
 
 <h1>Diagrama de Classes UML — Sistema de Monitoramento de Ambientes Inteligentes</h1>
-<p class="subtitle">Projeto Integrador V-B &nbsp;·&nbsp; PUC Goiás &nbsp;·&nbsp; ADS 2026 &nbsp;·&nbsp; Padrão MVC</p>
+<p class="subtitle">Projeto Integrador V-B &nbsp;·&nbsp; PUC Goias &nbsp;·&nbsp; ADS 2026 &nbsp;·&nbsp; Padrao Arquitetural MVC</p>
 
-<div class="canvas" id="canvas">
+<div id="diagram-container">
+<pre class="mermaid">
+classDiagram
+  direction TB
 
-  <!-- AppController (top-left) -->
-  <div class="cls pos-topleft" id="app-ctrl">
-    <div class="cls-header">
-      <span class="stereotype">«controller»</span>
-      <span class="classname">AppController</span>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Atributos</div>
-      <div class="field"><span class="vis-private">−</span> serialService : <span class="type-tag">SerialService</span></div>
-      <div class="field"><span class="vis-private">−</span> view : <span class="type-tag">MainView</span></div>
-      <div class="field"><span class="vis-private">−</span> scheduler : <span class="type-tag">ScheduledExecutorService</span></div>
-      <div class="field"><span class="vis-private">−</span> demoTask : <span class="type-tag">ScheduledFuture&lt;?&gt;</span></div>
-      <div class="field"><span class="vis-private">−</span> random : <span class="type-tag">Random</span></div>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Métodos</div>
-      <div class="method"><span class="vis-public">+</span> AppController()</div>
-      <div class="method"><span class="vis-private">−</span> setupCallbacks() : void</div>
-      <div class="method"><span class="vis-private">−</span> startDemo() : void</div>
-      <div class="method"><span class="vis-private">−</span> stopDemo() : void</div>
-      <div class="method"><span class="vis-private">−</span> refreshPortList() : void</div>
-      <div class="method"><span class="vis-public">+</span> start() : void</div>
-      <div class="method"><span class="vis-public vis-static">+</span> main(args : String[]) : void</div>
-    </div>
-  </div>
+  class AppController {
+    <<controller>>
+    -SerialService serialService
+    -MainView view
+    -ScheduledExecutorService scheduler
+    -Random random
+    +AppController()
+    -setupCallbacks() void
+    -startDemo() void
+    -stopDemo() void
+    -refreshPortList() void
+    +start() void
+    +main() void
+  }
 
-  <!-- Center arrow column (top row) -->
-  <div class="pos-topmid">
-    <div class="arrow-block">
-      <div class="arrow-label">controls</div>
-      <svg width="80" height="20" class="arrow-svg">
-        <defs>
-          <marker id="arr1" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L7,3 z" fill="#2b6cb0"/>
-          </marker>
-        </defs>
-        <line x1="2" y1="10" x2="72" y2="10" stroke="#2b6cb0" stroke-width="1.5" marker-end="url(#arr1)"/>
-      </svg>
-    </div>
-  </div>
+  class SerialService {
+    <<service>>
+    -SerialPort port
+    -Thread readThread
+    -boolean running
+    -List dataListeners
+    -List statusListeners
+    +addDataListener(Consumer) void
+    +addStatusListener(Consumer) void
+    +listPorts() List
+    +connect(String) boolean
+    +disconnect() void
+    +isConnected() boolean
+    -readLoop() void
+  }
 
-  <!-- MainView (top-right) -->
-  <div class="cls pos-topright" id="main-view">
-    <div class="cls-header">
-      <span class="stereotype">«view»</span>
-      <span class="classname">MainView</span>
-      <span class="extends">extends JFrame</span>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Atributos (seleção)</div>
-      <div class="field"><span class="vis-private">−</span> lblTempVal : <span class="type-tag">JLabel</span></div>
-      <div class="field"><span class="vis-private">−</span> lblHumidVal : <span class="type-tag">JLabel</span></div>
-      <div class="field"><span class="vis-private">−</span> lblLuxVal : <span class="type-tag">JLabel</span></div>
-      <div class="field"><span class="vis-private">−</span> cmbPortas : <span class="type-tag">JComboBox&lt;String&gt;</span></div>
-      <div class="field"><span class="vis-private">−</span> btnConectar : <span class="type-tag">JButton</span></div>
-      <div class="field"><span class="vis-private">−</span> onConnect : <span class="type-tag">Consumer&lt;String&gt;</span></div>
-      <div class="field"><span class="vis-private">−</span> onDisconnect : <span class="type-tag">Consumer&lt;String&gt;</span></div>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Métodos</div>
-      <div class="method"><span class="vis-public">+</span> updateData(data : SensorData) : void</div>
-      <div class="method"><span class="vis-public">+</span> setStatus(msg : String) : void</div>
-      <div class="method"><span class="vis-public">+</span> setPorts(ports : List&lt;String&gt;) : void</div>
-      <div class="method"><span class="vis-public">+</span> setOnConnect(cb : Consumer) : void</div>
-      <div class="method"><span class="vis-public">+</span> setOnDisconnect(cb : Consumer) : void</div>
-      <div class="method"><span class="vis-public">+</span> setOnRefreshPorts(cb : Runnable) : void</div>
-    </div>
-  </div>
+  class MainView {
+    <<view>>
+    -JLabel lblTempVal
+    -JLabel lblHumidVal
+    -JLabel lblLuxVal
+    -JComboBox cmbPortas
+    -JButton btnConectar
+    -Consumer onConnect
+    -Consumer onDisconnect
+    +updateData(SensorData) void
+    +setStatus(String) void
+    +setPorts(List) void
+    +setOnConnect(Consumer) void
+    +setOnDisconnect(Consumer) void
+    +setOnRefreshPorts(Runnable) void
+  }
 
-  <!-- Mid row: vertical arrows -->
-  <div class="pos-midrow" style="display:flex; justify-content:space-between; align-items:center; padding: 0 90px;">
-    <!-- Arrow down-left: AppController → SerialService -->
-    <div class="arrow-block">
-      <svg width="20" height="60" class="arrow-svg">
-        <defs>
-          <marker id="arr2" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto">
-            <path d="M0,0 L6,0 L3,7 z" fill="#2b6cb0"/>
-          </marker>
-        </defs>
-        <line x1="10" y1="2" x2="10" y2="55" stroke="#2b6cb0" stroke-width="1.5" marker-end="url(#arr2)"/>
-      </svg>
-      <div class="arrow-label">uses</div>
-    </div>
-    <!-- Arrow down-right from AppController mid to SensorData (dependency dashed) -->
-    <div class="arrow-block">
-      <div class="arrow-label">«creates»</div>
-      <svg width="20" height="60" class="arrow-svg">
-        <defs>
-          <marker id="arr3" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto">
-            <path d="M0,0 L6,0 L3,7 z" fill="#2b6cb0"/>
-          </marker>
-        </defs>
-        <line x1="10" y1="2" x2="10" y2="55" stroke="#2b6cb0" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr3)"/>
-      </svg>
-    </div>
-    <!-- Arrow down from MainView to SensorData -->
-    <div class="arrow-block">
-      <svg width="20" height="60" class="arrow-svg">
-        <defs>
-          <marker id="arr4" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto">
-            <path d="M0,0 L6,0 L3,7 z" fill="#2b6cb0"/>
-          </marker>
-        </defs>
-        <line x1="10" y1="2" x2="10" y2="55" stroke="#2b6cb0" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr4)"/>
-      </svg>
-      <div class="arrow-label">«uses»</div>
-    </div>
-  </div>
+  class SensorData {
+    <<model>>
+    -int temperature
+    -int humidity
+    -int luminosity
+    -long timestamp
+    +getTemperature() int
+    +getHumidity() int
+    +getLuminosity() int
+    +getTimestamp() long
+    +getLuminosityDescription() String
+    +fromCsv(String) SensorData
+  }
 
-  <!-- SerialService (bottom-left) -->
-  <div class="pos-botleft">
-    <div class="cls" id="serial-svc" style="width:280px;">
-      <div class="cls-header">
-        <span class="stereotype">«service»</span>
-        <span class="classname">SerialService</span>
-      </div>
-      <div class="cls-section">
-        <div class="section-title">Atributos</div>
-        <div class="field"><span class="vis-private">−</span> port : <span class="type-tag">SerialPort</span></div>
-        <div class="field"><span class="vis-private">−</span> readThread : <span class="type-tag">Thread</span></div>
-        <div class="field"><span class="vis-private">−</span> running : <span class="type-tag">boolean</span></div>
-        <div class="field"><span class="vis-private">−</span> dataListeners : <span class="type-tag">List&lt;Consumer&lt;SensorData&gt;&gt;</span></div>
-        <div class="field"><span class="vis-private">−</span> statusListeners : <span class="type-tag">List&lt;Consumer&lt;String&gt;&gt;</span></div>
-      </div>
-      <div class="cls-section">
-        <div class="section-title">Métodos</div>
-        <div class="method"><span class="vis-public">+</span> addDataListener(l : Consumer) : void</div>
-        <div class="method"><span class="vis-public">+</span> addStatusListener(l : Consumer) : void</div>
-        <div class="method"><span class="vis-public vis-static">+</span> listPorts() : List&lt;String&gt;</div>
-        <div class="method"><span class="vis-public">+</span> connect(portName : String) : boolean</div>
-        <div class="method"><span class="vis-public">+</span> disconnect() : void</div>
-        <div class="method"><span class="vis-public">+</span> isConnected() : boolean</div>
-        <div class="method"><span class="vis-private">−</span> readLoop() : void</div>
-        <div class="method"><span class="vis-private">−</span> notifyData(data : SensorData) : void</div>
-        <div class="method"><span class="vis-private">−</span> notifyStatus(msg : String) : void</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SensorData (bottom-mid) -->
-  <div class="cls pos-botmid" id="sensor-data">
-    <div class="cls-header">
-      <span class="stereotype">«model»</span>
-      <span class="classname">SensorData</span>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Atributos</div>
-      <div class="field"><span class="vis-private">−</span> temperature : <span class="type-tag">int</span></div>
-      <div class="field"><span class="vis-private">−</span> humidity : <span class="type-tag">int</span></div>
-      <div class="field"><span class="vis-private">−</span> luminosity : <span class="type-tag">int</span></div>
-      <div class="field"><span class="vis-private">−</span> timestamp : <span class="type-tag">long</span></div>
-    </div>
-    <div class="cls-section">
-      <div class="section-title">Métodos</div>
-      <div class="method"><span class="vis-public">+</span> getTemperature() : int</div>
-      <div class="method"><span class="vis-public">+</span> getHumidity() : int</div>
-      <div class="method"><span class="vis-public">+</span> getLuminosity() : int</div>
-      <div class="method"><span class="vis-public">+</span> getTimestamp() : long</div>
-      <div class="method"><span class="vis-public">+</span> getLuminosityDescription() : String</div>
-      <div class="method"><span class="vis-public vis-static">+</span> fromCsv(line : String) : SensorData</div>
-    </div>
-  </div>
-
-  <!-- Bottom-right connector placeholder -->
-  <div class="pos-botright"></div>
-
-</div><!-- /canvas -->
-
-<!-- Legend -->
-<div class="legend">
-  <div class="legend-item">
-    <svg width="28" height="12"><defs><marker id="la1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#2b6cb0"/></marker></defs><line x1="2" y1="6" x2="24" y2="6" stroke="#2b6cb0" stroke-width="1.5" marker-end="url(#la1)"/></svg>
-    Associação / Uso
-  </div>
-  <div class="legend-item">
-    <svg width="28" height="12"><defs><marker id="la2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L0,6 L6,3 z" fill="#2b6cb0"/></marker></defs><line x1="2" y1="6" x2="24" y2="6" stroke="#2b6cb0" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#la2)"/></svg>
-    Dependência
-  </div>
-  <div class="legend-item">
-    <svg width="28" height="12"><defs><marker id="la3" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto"><polyline points="0,0 4,4 0,8" fill="none" stroke="#276749" stroke-width="1.5"/></marker></defs><line x1="2" y1="6" x2="22" y2="6" stroke="#276749" stroke-width="1.5" marker-end="url(#la3)"/><rect x="24" y="3" width="4" height="6" fill="none" stroke="#276749" stroke-width="1.5"/></svg>
-    Herança (extends)
-  </div>
-  <div class="legend-item"><span style="font-family:monospace; text-decoration:underline">+método</span> = static</div>
-  <div class="legend-item"><span style="color:#e53e3e">−</span> = private &nbsp; <span style="color:#276749">+</span> = public</div>
+  AppController --> SerialService : uses
+  AppController --> MainView : controls
+  SerialService ..> SensorData : creates
+  MainView ..> SensorData : renders
+</pre>
 </div>
 
+<div class="legend">
+  <div class="legend-item">
+    <svg width="32" height="12"><defs><marker id="l1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#2c5282"/></marker></defs><line x1="2" y1="6" x2="28" y2="6" stroke="#2c5282" stroke-width="2" marker-end="url(#l1)"/></svg>
+    Associacao (usa diretamente)
+  </div>
+  <div class="legend-item">
+    <svg width="32" height="12"><defs><marker id="l2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#2c5282"/></marker></defs><line x1="2" y1="6" x2="28" y2="6" stroke="#2c5282" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#l2)"/></svg>
+    Dependencia (usa como parametro)
+  </div>
+  <div class="legend-item">
+    &lt;&lt;stereotype&gt;&gt; = camada MVC &nbsp;|&nbsp; + publico &nbsp; - privado
+  </div>
+</div>
+
+<script>
+  mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
 </body>
 </html>
