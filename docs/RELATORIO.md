@@ -11,9 +11,10 @@ CURSO DE ANÁLISE E DESENVOLVIMENTO DE SISTEMAS
 
 **Disciplina:** Projeto Integrador V – B  
 **Professor:** Thalles Bruno G. N. dos Santos  
-**Aluno(a):** _[Nome do aluno]_  
-**Matrícula:** _[Matrícula]_  
-**Data de entrega:** 07 de abril de 2026
+**Aluno(a):** Werley Lemes Da Silva Filho  
+**Matrícula:** 1132024200180  
+**Data de entrega:** 07 de abril de 2026  
+**Vídeo de apresentação:** 🎬 https://www.youtube.com/watch?v=JY8bV3CvmRY
 
 ---
 
@@ -102,14 +103,14 @@ O sistema Java segue o padrão MVC com as seguintes classes principais:
 
 - **`AppController`** (Controller): Ponto de entrada da aplicação (método `main()`). Instancia SerialService e MainView, configura os callbacks entre eles e gerencia o ciclo de vida da aplicação.
 
-_[Inserir aqui a imagem do Diagrama de Classes UML — ver arquivo uml/diagrama-classes.png]_
+![Diagrama de Classes UML](../uml/diagrama-classes.png)
 
 ### 4.3 Protótipo da Interface
 
-_[Inserir aqui o screenshot do protótipo de UI — ver pasta ui-prototype/screenshots/]_
+A interface abaixo representa a visão futura do sistema para dispositivos móveis, desenvolvida no Figma com tema escuro, cards por sensor e navegação inferior:
 
-O protótipo de interface foi desenvolvido no **[Figma / QuantUX]** e está disponível em:  
-🔗 _[Cole o link do protótipo aqui]_
+O protótipo de interface foi desenvolvido no **Figma** e está disponível em:  
+🔗 https://www.figma.com/design/7UXbsHgpB3rGO44tyBmvIZ/Project-Integrator-V-B-PUC-GO?node-id=1-23&t=Vub1YL1a24Vj0Hoa-1
 
 ---
 
@@ -120,10 +121,9 @@ O protótipo de interface foi desenvolvido no **[Figma / QuantUX]** e está disp
 O circuito foi implementado e simulado com sucesso no Tinkercad. A simulação demonstra o funcionamento dos sensores DHT11 e LDR, com os sliders interativos permitindo variação dos valores durante a execução.
 
 **Link da simulação no Tinkercad:**  
-🔗 _[Cole o link do Tinkercad aqui]_
+🔗 https://www.tinkercad.com/things/eALbQIdph4d-pi-v-b-monitoramento-ambiental
 
-_[Inserir screenshot do circuito no Tinkercad]_
-_[Inserir screenshot do Serial Monitor com leituras]_
+> **Nota:** O Tinkercad não suporta o sensor DHT11 nativamente. Foram utilizados TMP36 (temperatura), LDR (luminosidade) e Potenciômetro (simulando umidade), mantendo o mesmo protocolo CSV de saída serial.
 
 ### 5.2 Módulo Java
 
@@ -133,16 +133,23 @@ O módulo Java foi implementado e compilado com sucesso utilizando Maven. A apli
 - Luminosidade em valor analógico (0–1023) com descrição textual
 
 **Repositório GitHub:**  
-🔗 _[Cole o link do repositório aqui]_
+🔗 https://github.com/novak-drg/project-integrator-v-b-puc
 
-_[Inserir screenshot da interface Java rodando]_
+A interface gráfica exibe os dados em tempo real com tema escuro (FlatLaf), três cards de sensores com cores distintas (laranja para temperatura, azul para umidade, dourado para luminosidade), status do ambiente e indicador de conexão.
 
 ### 5.3 Diagrama UML
 
 O Diagrama de Classes UML documenta as 4 classes principais do sistema, seus atributos, métodos e relacionamentos, conforme o padrão MVC adotado.
 
-**Link do diagrama:**  
-🔗 _[Cole o link do LucidChart/yED aqui]_
+**Diagrama gerado com yED Live** — arquivo: `uml/diagrama-classes.png`
+
+---
+
+## 5.4 Vídeo de Apresentação
+
+O vídeo de apresentação demonstra o funcionamento completo do sistema: circuito no Tinkercad, módulo Java em execução com modo DEMO e protótipo de interface mobile no Figma.
+
+**🎬 Link do vídeo:** https://www.youtube.com/watch?v=JY8bV3CvmRY
 
 ---
 

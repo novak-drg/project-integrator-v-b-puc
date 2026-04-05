@@ -1,4 +1,4 @@
-# .gitignore — PI-V-B Monitoramento Ambiental
+﻿# .gitignore — PI-V-B Monitoramento Ambiental
 
 # Maven
 java-app/target/
@@ -33,3 +33,7 @@ ui-prototype/screenshots/*
 arduino/screenshots/*
 !arduino/screenshots/.gitkeep
 uml/*.png
+
+# GSD planning artifacts
+.planning/
+

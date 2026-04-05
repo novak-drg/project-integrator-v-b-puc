@@ -1,125 +1,181 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <title>Diagrama de Classes — Monitoramento de Ambientes Inteligentes</title>
-<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
-    background: #ffffff;
+    background: #fff;
     font-family: 'Segoe UI', Arial, sans-serif;
     display: flex; flex-direction: column; align-items: center;
-    padding: 32px 24px 40px;
+    padding: 28px 20px 36px;
   }
-  h1 { font-size: 17px; font-weight: 700; color: #1a202c; text-align: center; margin-bottom: 4px; }
-  .subtitle { font-size: 11px; color: #718096; text-align: center; margin-bottom: 30px; }
-  #diagram-container { width: 100%; max-width: 1100px; display: flex; justify-content: center; }
-  .mermaid { width: 100%; }
+  h1 { font-size: 17px; font-weight: 700; color: #1a202c; text-align: center; margin-bottom: 5px; }
+  .sub { font-size: 11px; color: #718096; text-align: center; margin-bottom: 24px; }
+  #wrap { width: 100%; max-width: 700px; }
+  #wrap svg { width: 100%; height: auto; display: block; }
   .legend {
-    display: flex; flex-wrap: wrap; gap: 18px; justify-content: center;
-    margin-top: 28px; padding: 10px 22px;
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+    margin-top: 20px; padding: 10px 20px;
     background: #f7fafc; border: 1px solid #e2e8f0; border-radius: 6px;
-    font-size: 10.5px; color: #4a5568;
+    font-size: 11px; color: #4a5568;
   }
-  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .li { display: flex; align-items: center; gap: 7px; }
 </style>
 </head>
 <body>
 
 <h1>Diagrama de Classes UML — Sistema de Monitoramento de Ambientes Inteligentes</h1>
-<p class="subtitle">Projeto Integrador V-B &nbsp;·&nbsp; PUC Goias &nbsp;·&nbsp; ADS 2026 &nbsp;·&nbsp; Padrao Arquitetural MVC</p>
+<p class="sub">Projeto Integrador V-B &nbsp;·&nbsp; PUC Goias &nbsp;·&nbsp; ADS 2026 &nbsp;·&nbsp; Padrão Arquitetural MVC</p>
 
-<div id="diagram-container">
-<pre class="mermaid">
-classDiagram
-  direction TB
+<div id="wrap">
 
-  class AppController {
-    <<controller>>
-    -SerialService serialService
-    -MainView view
-    -ScheduledExecutorService scheduler
-    -Random random
-    +AppController()
-    -setupCallbacks() void
-    -startDemo() void
-    -stopDemo() void
-    -refreshPortList() void
-    +start() void
-    +main() void
-  }
+<svg xmlns="http://www.w3.org/2000/svg"
+     viewBox="0 0 720 610"
+     font-family="'Segoe UI',Arial,sans-serif">
+  <defs>
+    <marker id="as" viewBox="0 0 10 10" markerWidth="7" markerHeight="7"
+            refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#2c5282"/>
+    </marker>
+    <marker id="ad" viewBox="0 0 10 10" markerWidth="7" markerHeight="7"
+            refX="9" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 z" fill="#6b4c11"/>
+    </marker>
+  </defs>
 
-  class SerialService {
-    <<service>>
-    -SerialPort port
-    -Thread readThread
-    -boolean running
-    -List dataListeners
-    -List statusListeners
-    +addDataListener(Consumer) void
-    +addStatusListener(Consumer) void
-    +listPorts() List
-    +connect(String) boolean
-    +disconnect() void
-    +isConnected() boolean
-    -readLoop() void
-  }
+  
 
-  class MainView {
-    <<view>>
-    -JLabel lblTempVal
-    -JLabel lblHumidVal
-    -JLabel lblLuxVal
-    -JComboBox cmbPortas
-    -JButton btnConectar
-    -Consumer onConnect
-    -Consumer onDisconnect
-    +updateData(SensorData) void
-    +setStatus(String) void
-    +setPorts(List) void
-    +setOnConnect(Consumer) void
-    +setOnDisconnect(Consumer) void
-    +setOnRefreshPorts(Runnable) void
-  }
+  
+  <rect x="10" y="10" width="310" height="255" rx="4" fill="#ebf4ff" stroke="#3182ce" stroke-width="2"/>
+  <rect x="10" y="10" width="310" height="26" rx="4" fill="#bee3f8" stroke="none"/>
+  <line x1="10" y1="36" x2="320" y2="36" stroke="#3182ce" stroke-width="2"/>
+  <text x="165" y="27" text-anchor="middle" font-size="11" font-style="italic" fill="#2b6cb0">«Controller»</text>
+  <rect x="10" y="36" width="310" height="28" fill="#bee3f8" stroke="none"/>
+  <line x1="10" y1="64" x2="320" y2="64" stroke="#3182ce" stroke-width="2"/>
+  <text x="165" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#1a365d">AppController</text>
+  
+  <text x="22" y="82"  font-size="11" fill="#2d3748">-SerialService serialService</text>
+  <text x="22" y="99"  font-size="11" fill="#2d3748">-MainView view</text>
+  <text x="22" y="116" font-size="11" fill="#2d3748">-ScheduledExecutorService scheduler</text>
+  <line x1="10" y1="126" x2="320" y2="126" stroke="#3182ce" stroke-width="1"/>
+  
+  <text x="22" y="143" font-size="11" fill="#2d3748">+AppController()</text>
+  <text x="22" y="160" font-size="11" fill="#2d3748">-setupCallbacks() : void</text>
+  <text x="22" y="177" font-size="11" fill="#2d3748">-startDemo() : void</text>
+  <text x="22" y="194" font-size="11" fill="#2d3748">+refreshPortList() : void</text>
+  <text x="22" y="211" font-size="11" fill="#2d3748">+start() : void</text>
+  <text x="22" y="228" font-size="11" fill="#2d3748">+main() : void</text>
+  
 
-  class SensorData {
-    <<model>>
-    -int temperature
-    -int humidity
-    -int luminosity
-    -long timestamp
-    +getTemperature() int
-    +getHumidity() int
-    +getLuminosity() int
-    +getTimestamp() long
-    +getLuminosityDescription() String
-    +fromCsv(String) SensorData
-  }
+  
+  <rect x="400" y="10" width="310" height="255" rx="4" fill="#f0fff4" stroke="#38a169" stroke-width="2"/>
+  <rect x="400" y="10" width="310" height="26" rx="4" fill="#c6f6d5" stroke="none"/>
+  <line x1="400" y1="36" x2="710" y2="36" stroke="#38a169" stroke-width="2"/>
+  <text x="555" y="27" text-anchor="middle" font-size="11" font-style="italic" fill="#276749">«Service»</text>
+  <rect x="400" y="36" width="310" height="28" fill="#c6f6d5" stroke="none"/>
+  <line x1="400" y1="64" x2="710" y2="64" stroke="#38a169" stroke-width="2"/>
+  <text x="555" y="55" text-anchor="middle" font-size="14" font-weight="bold" fill="#1c4532">SerialService</text>
+  
+  <text x="412" y="82"  font-size="11" fill="#2d3748">-SerialPort port</text>
+  <text x="412" y="99"  font-size="11" fill="#2d3748">-Thread readThread</text>
+  <text x="412" y="116" font-size="11" fill="#2d3748">-boolean running</text>
+  <line x1="400" y1="126" x2="710" y2="126" stroke="#38a169" stroke-width="1"/>
+  
+  <text x="412" y="143" font-size="11" fill="#2d3748">+addDataListener(Consumer) : void</text>
+  <text x="412" y="160" font-size="11" fill="#2d3748">+addStatusListener(Consumer) : void</text>
+  <text x="412" y="177" font-size="11" fill="#2d3748">+listPorts() : List</text>
+  <text x="412" y="194" font-size="11" fill="#2d3748">+connect(String) : boolean</text>
+  <text x="412" y="211" font-size="11" fill="#2d3748">+disconnect() : void</text>
+  <text x="412" y="228" font-size="11" fill="#2d3748">+isConnected() : boolean</text>
 
-  AppController --> SerialService : uses
-  AppController --> MainView : controls
-  SerialService ..> SensorData : creates
-  MainView ..> SensorData : renders
-</pre>
+  
+
+  
+  <rect x="10" y="340" width="310" height="260" rx="4" fill="#fffff0" stroke="#d69e2e" stroke-width="2"/>
+  <rect x="10" y="340" width="310" height="26" rx="4" fill="#fefcbf" stroke="none"/>
+  <line x1="10" y1="366" x2="320" y2="366" stroke="#d69e2e" stroke-width="2"/>
+  <text x="165" y="357" text-anchor="middle" font-size="11" font-style="italic" fill="#744210">«View»</text>
+  <rect x="10" y="366" width="310" height="28" fill="#fefcbf" stroke="none"/>
+  <line x1="10" y1="394" x2="320" y2="394" stroke="#d69e2e" stroke-width="2"/>
+  <text x="165" y="385" text-anchor="middle" font-size="14" font-weight="bold" fill="#7b341e">MainView</text>
+  
+  <text x="22" y="412" font-size="11" fill="#2d3748">-JLabel lblTempVal</text>
+  <text x="22" y="429" font-size="11" fill="#2d3748">-JLabel lblHumidVal</text>
+  <text x="22" y="446" font-size="11" fill="#2d3748">-JLabel lblLuxVal</text>
+  <text x="22" y="463" font-size="11" fill="#2d3748">-JComboBox cmbPortas</text>
+  <text x="22" y="480" font-size="11" fill="#2d3748">-JButton btnConectar</text>
+  <line x1="10" y1="490" x2="320" y2="490" stroke="#d69e2e" stroke-width="1"/>
+  
+  <text x="22" y="507" font-size="11" fill="#2d3748">+updateData(SensorData) : void</text>
+  <text x="22" y="524" font-size="11" fill="#2d3748">+setStatus(String) : void</text>
+  <text x="22" y="541" font-size="11" fill="#2d3748">+setPorts(List) : void</text>
+  <text x="22" y="558" font-size="11" fill="#2d3748">+setOnConnect(Consumer) : void</text>
+  <text x="22" y="575" font-size="11" fill="#2d3748">+setOnDisconnect(Consumer) : void</text>
+  
+
+  
+  <rect x="400" y="340" width="310" height="260" rx="4" fill="#fff5f5" stroke="#e53e3e" stroke-width="2"/>
+  <rect x="400" y="340" width="310" height="26" rx="4" fill="#fed7d7" stroke="none"/>
+  <line x1="400" y1="366" x2="710" y2="366" stroke="#e53e3e" stroke-width="2"/>
+  <text x="555" y="357" text-anchor="middle" font-size="11" font-style="italic" fill="#742a2a">«Model»</text>
+  <rect x="400" y="366" width="310" height="28" fill="#fed7d7" stroke="none"/>
+  <line x1="400" y1="394" x2="710" y2="394" stroke="#e53e3e" stroke-width="2"/>
+  <text x="555" y="385" text-anchor="middle" font-size="14" font-weight="bold" fill="#742a2a">SensorData</text>
+  
+  <text x="412" y="412" font-size="11" fill="#2d3748">-int temperature</text>
+  <text x="412" y="429" font-size="11" fill="#2d3748">-int humidity</text>
+  <text x="412" y="446" font-size="11" fill="#2d3748">-int luminosity</text>
+  <text x="412" y="463" font-size="11" fill="#2d3748">-long timestamp</text>
+  <line x1="400" y1="473" x2="710" y2="473" stroke="#e53e3e" stroke-width="1"/>
+  
+  <text x="412" y="490" font-size="11" fill="#2d3748">+getTemperature() : int</text>
+  <text x="412" y="507" font-size="11" fill="#2d3748">+getHumidity() : int</text>
+  <text x="412" y="524" font-size="11" fill="#2d3748">+getLuminosity() : int</text>
+  <text x="412" y="541" font-size="11" fill="#2d3748">+getTimestamp() : long</text>
+  <text x="412" y="558" font-size="11" fill="#2d3748">+getLuminosityDescription() : String</text>
+  <text x="412" y="575" font-size="11" fill="#2d3748">+fromCsv(String) : SensorData</text>
+
+  
+
+  
+  <line x1="320" y1="150" x2="397" y2="150"
+        stroke="#2c5282" stroke-width="2" marker-end="url(#as)"/>
+  <text x="358" y="144" text-anchor="middle" font-size="10" font-weight="600" fill="#2c5282">uses</text>
+
+  
+  <line x1="165" y1="265" x2="165" y2="337"
+        stroke="#2c5282" stroke-width="2" marker-end="url(#as)"/>
+  <text x="178" y="305" font-size="10" font-weight="600" fill="#2c5282">controls</text>
+
+  
+  <line x1="555" y1="265" x2="555" y2="337"
+        stroke="#6b4c11" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#ad)"/>
+  <text x="568" y="305" font-size="10" font-weight="600" fill="#6b4c11">creates</text>
+
+  
+  <line x1="320" y1="470" x2="397" y2="470"
+        stroke="#6b4c11" stroke-width="2" stroke-dasharray="7,5" marker-end="url(#ad)"/>
+  <text x="358" y="464" text-anchor="middle" font-size="10" font-weight="600" fill="#6b4c11">renders</text>
+
+</svg>
 </div>
 
 <div class="legend">
-  <div class="legend-item">
-    <svg width="32" height="12"><defs><marker id="l1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#2c5282"/></marker></defs><line x1="2" y1="6" x2="28" y2="6" stroke="#2c5282" stroke-width="2" marker-end="url(#l1)"/></svg>
-    Associacao (usa diretamente)
+  <div class="li">
+    <svg width="36" height="14"><defs><marker id="l1" viewBox="0 0 10 10" markerWidth="6" markerHeight="6" refX="9" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,5 L0,10 z" fill="#2c5282"/></marker></defs>
+    <line x1="2" y1="7" x2="32" y2="7" stroke="#2c5282" stroke-width="2.5" marker-end="url(#l1)"/></svg>
+    Associação (usa diretamente)
   </div>
-  <div class="legend-item">
-    <svg width="32" height="12"><defs><marker id="l2" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5 z" fill="#2c5282"/></marker></defs><line x1="2" y1="6" x2="28" y2="6" stroke="#2c5282" stroke-width="2" stroke-dasharray="5,3" marker-end="url(#l2)"/></svg>
-    Dependencia (usa como parametro)
+  <div class="li">
+    <svg width="36" height="14"><defs><marker id="l2" viewBox="0 0 10 10" markerWidth="6" markerHeight="6" refX="9" refY="5" orient="auto" markerUnits="strokeWidth"><path d="M0,0 L10,5 L0,10 z" fill="#6b4c11"/></marker></defs>
+    <line x1="2" y1="7" x2="32" y2="7" stroke="#6b4c11" stroke-width="2.5" stroke-dasharray="5,3" marker-end="url(#l2)"/></svg>
+    Dependência (usa como parâmetro)
   </div>
-  <div class="legend-item">
-    &lt;&lt;stereotype&gt;&gt; = camada MVC &nbsp;|&nbsp; + publico &nbsp; - privado
-  </div>
+  <div class="li">«stereotype» = camada MVC &nbsp;|&nbsp; + público &nbsp;·&nbsp; - privado</div>
 </div>
 
-<script>
-  mermaid.initialize({ startOnLoad: true, theme: 'default' });
-</script>
 </body>
 </html>
+

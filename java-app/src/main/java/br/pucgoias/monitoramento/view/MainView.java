@@ -1,65 +1,44 @@
 package br.pucgoias.monitoramento.view;
 
 import br.pucgoias.monitoramento.model.SensorData;
-import com.formdev.flatlaf.FlatDarkLaf;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.awt.geom.Path2D;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
-/**
- * Interface gráfica principal — tema VSCode Dark com cards de sensores.
- *
- * <p>Exibe em tempo real: Temperatura, Umidade e Luminosidade,
- * além de controles de conexão serial e indicador de status.
- */
 public class MainView extends JFrame {
 
-    // ── Paleta VSCode Dark ────────────────────────────────────────────────
-    private static final Color BG         = new Color(30, 30, 30);
-    private static final Color BG_SIDEBAR  = new Color(37, 37, 38);
-    private static final Color BG_CARD     = new Color(45, 45, 48);
-    private static final Color BG_CONTROL  = new Color(58, 58, 62);
-    private static final Color BG_CTRL_HOV = new Color(75, 75, 80);
-    private static final Color C_TEMP      = new Color(255, 100, 140);
-    private static final Color C_HUMID     = new Color(50,  205, 255);
-    private static final Color C_LUX       = new Color(255, 195,  50);
-    private static final Color C_OK        = new Color(72,  200, 120);
-    private static final Color C_ERR       = new Color(240,  80,  80);
-    private static final Color C_TEXT      = new Color(204, 204, 204);
-    private static final Color C_GRAY      = new Color(130, 130, 145);
-    private static final Color C_LINE      = new Color(60,  60,  65);
+    private static final Color BG_BODY    = c("#020617");
+    private static final Color BG_SURFACE = c("#0B1326");
+    private static final Color BG_CTRL    = c("#171F33");
+    private static final Color C_TEMP     = c("#FFB783");
+    private static final Color C_HUMID    = c("#7BD0FF");
+    private static final Color C_LUX      = c("#EFC200");
+    private static final Color C_OK       = c("#34D399");
+    private static final Color C_ERR      = c("#F87171");
+    private static final Color C_PRI      = c("#F1F5F9");
+    private static final Color C_SEC      = c("#C6C6CD");
+    private static final Color C_MUT      = new Color(198, 198, 205, 90);
+    private static final Color C_HEADING  = c("#DAE2FD");
+    private static final Color C_NAV_ON   = c("#7BD0FF");
+    private static final Color C_NAV_OFF  = c("#64748B");
+    private static final Color C_BADGE    = c("#94A3B8");
 
-    // ── Fontes ────────────────────────────────────────────────────────────
-    private static final Font F_TITLE  = new Font("Segoe UI", Font.BOLD,  18);
-    private static final Font F_SUB    = new Font("Segoe UI", Font.PLAIN, 10);
-    private static final Font F_CLABEL = new Font("Segoe UI", Font.BOLD,  10);
-    private static final Font F_VALUE  = new Font("Segoe UI", Font.BOLD,  50);
-    private static final Font F_UNIT   = new Font("Segoe UI", Font.PLAIN, 15);
-    private static final Font F_DESC   = new Font("Segoe UI", Font.PLAIN, 10);
-    private static final Font F_STATUS = new Font("Segoe UI", Font.BOLD,  11);
-    private static final Font F_CTRL   = new Font("Segoe UI", Font.PLAIN, 11);
+    private final JLabel lblTempVal   = new JLabel("—");
+    private final JLabel lblHumidVal  = new JLabel("—");
+    private final JLabel lblLuxLabel  = new JLabel("—");
+    private final JLabel lblLuxRaw    = new JLabel("");
+    private final JLabel lblEnvStatus = new JLabel("Aguardando...");
+    private final JLabel lblLastRead  = new JLabel("ÚLTIMA LEITURA: —");
+    private final JLabel lblDot       = new JLabel("●");
+    private final JLabel lblBadgeTxt  = new JLabel("DESCONECTADO");
 
-    // ── Widgets ───────────────────────────────────────────────────────────
-    private final JLabel lblTempVal   = makeValueLabel("—", C_TEMP);
-    private final JLabel lblHumidVal  = makeValueLabel("—", C_HUMID);
-    private final JLabel lblLuxVal    = makeValueLabel("—", C_LUX);
-    private final JLabel lblTempDesc  = makeDescLabel("Aguardando...");
-    private final JLabel lblHumidDesc = makeDescLabel("Aguardando...");
-    private final JLabel lblLuxDesc   = makeDescLabel("Aguardando...");
-    private final JProgressBar pbTemp  = makeBar(C_TEMP,  0,  50);
-    private final JProgressBar pbHumid = makeBar(C_HUMID, 0, 100);
-    private final JProgressBar pbLux   = makeBar(C_LUX,   0, 1023);
-
-    private final JLabel lblStatus   = new JLabel("● Desconectado");
-    private final JLabel lblLastRead = new JLabel("Última leitura: —");
-
-    private final JComboBox<String> cmbPortas   = new JComboBox<>();
+    private final JComboBox<String> cmbPortas    = new JComboBox<>();
     private final JButton           btnConectar  = new JButton("Conectar");
     private final JButton           btnAtualizar = new JButton("↻");
 
@@ -67,48 +46,21 @@ public class MainView extends JFrame {
     private Consumer<String> onDisconnect;
     private Runnable         onRefreshPorts;
 
-    // ── Construtor ────────────────────────────────────────────────────────
     public MainView() {
-        super("Monitoramento Ambiental — PI V-B | PUC Goiás");
-        setupLaf();
+        super("Monitor Ambiental — PI V-B | PUC Goiás");
         setupWindow();
         buildUI();
     }
 
-    private void setupLaf() {
-        try {
-            FlatDarkLaf.setup();
-            UIManager.put("Button.arc", 6);
-            UIManager.put("Component.arc", 6);
-            UIManager.put("Button.background",        BG_CONTROL);
-            UIManager.put("Button.foreground",        C_TEXT);
-            UIManager.put("Button.hoverBackground",   BG_CTRL_HOV);
-            UIManager.put("Button.pressedBackground", new Color(45, 45, 50));
-            UIManager.put("ComboBox.background",      BG_CONTROL);
-            UIManager.put("ComboBox.foreground",      C_TEXT);
-            UIManager.put("ComboBox.buttonBackground",BG_CTRL_HOV);
-            UIManager.put("ComboBox.selectionBackground", new Color(0, 120, 215));
-            UIManager.put("TextField.background",     BG_CONTROL);
-            UIManager.put("TextField.foreground",     C_TEXT);
-            UIManager.put("ScrollPane.background",    BG_CARD);
-            UIManager.put("List.background",          BG_CARD);
-            UIManager.put("List.foreground",          C_TEXT);
-            UIManager.put("List.selectionBackground", new Color(0, 100, 180));
-            UIManager.put("PopupMenu.background",     BG_CARD);
-            UIManager.put("MenuItem.background",      BG_CARD);
-            UIManager.put("MenuItem.foreground",      C_TEXT);
-            UIManager.setLookAndFeel(new FlatDarkLaf());
-        } catch (Exception ignored) {}
-    }
-
     private void setupWindow() {
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setMinimumSize(new Dimension(860, 570));
-        setPreferredSize(new Dimension(1020, 650));
-        getContentPane().setBackground(BG);
+        setPreferredSize(new Dimension(480, 750));
+        setMinimumSize(new Dimension(420, 650));
+        setResizable(true);
+        getContentPane().setBackground(BG_BODY);
         setLayout(new BorderLayout());
-        addWindowListener(new WindowAdapter() {
-            @Override public void windowClosing(WindowEvent e) {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override public void windowClosing(java.awt.event.WindowEvent e) {
                 if (onDisconnect != null) onDisconnect.accept("");
                 dispose();
                 System.exit(0);
@@ -118,346 +70,300 @@ public class MainView extends JFrame {
 
     private void buildUI() {
         add(buildHeader(), BorderLayout.NORTH);
-        add(buildCards(),  BorderLayout.CENTER);
-        add(buildFooter(), BorderLayout.SOUTH);
+
+        JScrollPane scroll = new JScrollPane(buildContent());
+        scroll.setBorder(null);
+        scroll.setOpaque(false);
+        scroll.getViewport().setOpaque(false);
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        add(scroll, BorderLayout.CENTER);
+
+        add(buildBottomNav(), BorderLayout.SOUTH);
         pack();
         setLocationRelativeTo(null);
     }
 
-    // ── Cabeçalho ─────────────────────────────────────────────────────────
     private JPanel buildHeader() {
-        JPanel p = new JPanel(new BorderLayout(14, 0)) {
+        JPanel p = solid(BG_SURFACE, new BorderLayout());
+        p.setBorder(new EmptyBorder(16, 24, 16, 24));
+
+        JPanel left = transparent(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        left.add(makeWifiIcon());
+        left.add(lbl("<html>Monitor<br>Ambiental</html>", font("Manrope", Font.BOLD, 18), C_PRI));
+
+        JPanel badge = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 3)) {
             @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setPaint(new GradientPaint(0, 0, new Color(40, 30, 60), getWidth(), 0, BG_SIDEBAR));
-                g2.fillRect(0, 0, getWidth(), getHeight());
-                g2.setColor(C_LINE);
-                g2.fillRect(0, getHeight() - 1, getWidth(), 1);
+                Graphics2D g2 = aa(g);
+                g2.setColor(BG_CTRL);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 999, 999);
                 g2.dispose();
             }
         };
-        p.setOpaque(false);
-        p.setBorder(new EmptyBorder(14, 22, 14, 22));
+        badge.setOpaque(false);
+        badge.setBorder(new EmptyBorder(0, 4, 0, 4));
+        lblDot.setFont(font("Dialog", Font.PLAIN, 8));
+        lblDot.setForeground(C_ERR);
+        lblBadgeTxt.setFont(font("Inter", Font.BOLD, 9));
+        lblBadgeTxt.setForeground(C_BADGE);
+        badge.add(lblDot);
+        badge.add(lblBadgeTxt);
 
-        JComponent homeIcon = makeHomeIcon();
-        homeIcon.setAlignmentY(Component.CENTER_ALIGNMENT);
-
-        JPanel texts = new JPanel();
-        texts.setLayout(new BoxLayout(texts, BoxLayout.Y_AXIS));
-        texts.setOpaque(false);
-
-        JLabel title = new JLabel("Monitoramento de Ambientes Inteligentes");
-        title.setFont(F_TITLE);
-        title.setForeground(Color.WHITE);
-
-        JLabel sub = new JLabel("Projeto Integrador V-B  ·  PUC Goiás  ·  ADS 2026");
-        sub.setFont(F_SUB);
-        sub.setForeground(C_GRAY);
-
-        texts.add(title);
-        texts.add(Box.createVerticalStrut(3));
-        texts.add(sub);
-
-        JPanel left = new JPanel(new BorderLayout(14, 0));
-        left.setOpaque(false);
-        left.add(homeIcon, BorderLayout.WEST);
-        left.add(texts, BorderLayout.CENTER);
-
-        lblStatus.setFont(F_STATUS);
-        lblStatus.setForeground(C_ERR);
-
-        p.add(left, BorderLayout.WEST);
-        p.add(lblStatus, BorderLayout.EAST);
+        p.add(left,  BorderLayout.WEST);
+        p.add(badge, BorderLayout.EAST);
         return p;
     }
 
-    // ── Cards ─────────────────────────────────────────────────────────────
-    private JPanel buildCards() {
-        JPanel p = new JPanel(new GridLayout(1, 3, 16, 0));
-        p.setBackground(BG);
-        p.setBorder(new EmptyBorder(20, 20, 12, 20));
-
-        p.add(buildCard(IconType.TEMPERATURE, "TEMPERATURA", "°C",  lblTempVal,  lblTempDesc,  pbTemp,  C_TEMP));
-        p.add(buildCard(IconType.HUMIDITY,    "UMIDADE",     "%",   lblHumidVal, lblHumidDesc, pbHumid, C_HUMID));
-        p.add(buildCard(IconType.LUMINOSITY,  "LUMINOSIDADE","lux", lblLuxVal,   lblLuxDesc,   pbLux,   C_LUX));
-        return p;
-    }
-
-    private JPanel buildCard(IconType type, String title, String unit,
-                              JLabel valLbl, JLabel descLbl, JProgressBar pb, Color accent) {
-        JPanel card = new JPanel() {
+    private JPanel buildContent() {
+        JPanel canvas = new JPanel() {
             @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setPaint(new GradientPaint(0, 0, BG_CARD, 0, getHeight(), new Color(35, 35, 38)));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
-                g2.setColor(accent);
-                g2.fillRect(0, 0, getWidth(), 4);
-                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 50));
-                g2.setStroke(new BasicStroke(1.2f));
-                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, 14, 14);
+                g.setColor(BG_SURFACE);
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        canvas.setLayout(new GridBagLayout());
+        canvas.setOpaque(false);
+
+        GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx   = 0;
+        gc.fill    = GridBagConstraints.HORIZONTAL;
+        gc.weightx = 1.0;
+        gc.weighty = 0;
+
+        gc.gridy  = 0;
+        gc.insets = new Insets(24, 20, 0, 20);
+        canvas.add(buildEnvSection(), gc);
+
+        gc.insets = new Insets(16, 20, 0, 20);
+
+        gc.gridy = 1;
+        canvas.add(buildCard("Temperatura",  C_TEMP,  new Color(217, 119, 34, 45), lblTempVal,  "°C", null,      IconType.TEMP),  gc);
+        gc.gridy = 2;
+        canvas.add(buildCard("Umidade",      C_HUMID, new Color(0,   80, 120, 60), lblHumidVal, "%",  null,      IconType.HUMID), gc);
+        gc.gridy = 3;
+        canvas.add(buildCard("Luminosidade", C_LUX,   new Color(206, 167, 0,  45), lblLuxLabel, null, lblLuxRaw, IconType.LUX),   gc);
+
+        gc.gridy  = 4;
+        gc.insets = new Insets(14, 20, 0, 20);
+        canvas.add(buildConnectionPanel(), gc);
+
+        gc.gridy  = 5;
+        gc.insets = new Insets(10, 20, 16, 20);
+        JPanel footer = transparent(new FlowLayout(FlowLayout.CENTER));
+        lblLastRead.setFont(font("Inter", Font.PLAIN, 9));
+        lblLastRead.setForeground(C_MUT);
+        footer.add(lblLastRead);
+        canvas.add(footer, gc);
+
+        gc.gridy   = 6;
+        gc.weighty = 1.0;
+        canvas.add(Box.createVerticalGlue(), gc);
+
+        return canvas;
+    }
+
+    private JPanel buildEnvSection() {
+        JPanel p = transparent(new GridLayout(2, 1, 0, 4));
+        JLabel tag = lbl("STATUS DO AMBIENTE", font("Inter", Font.PLAIN, 10), new Color(198, 198, 205, 130));
+        lblEnvStatus.setFont(font("Manrope", Font.BOLD, 28));
+        lblEnvStatus.setForeground(C_HEADING);
+        p.add(tag);
+        p.add(lblEnvStatus);
+        return p;
+    }
+
+    private JPanel buildCard(String name, Color accent, Color iconBg,
+                              JLabel mainLbl, String unit, JLabel subLbl, IconType icon) {
+        JPanel card = new JPanel(new BorderLayout(0, 8)) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = aa(g);
+                g2.setColor(new Color(45, 52, 73, 95));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 32, 32);
+                int r = 90;
+                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 22));
+                g2.fillOval(getWidth() - r, -r / 2, r * 2, r * 2);
                 g2.dispose();
             }
         };
-        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setOpaque(false);
-        card.setBorder(new EmptyBorder(20, 20, 20, 20));
+        card.setBorder(new EmptyBorder(18, 20, 18, 20));
 
-        JComponent icon = makeSensorIcon(type, accent);
-        icon.setAlignmentX(CENTER_ALIGNMENT);
+        JPanel topRow  = transparent(new BorderLayout());
+        JPanel iconName = transparent(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        iconName.add(makeSensorBadge(icon, accent, iconBg));
+        iconName.add(lbl(name, font("Inter", Font.BOLD, 13), C_SEC));
+        topRow.add(iconName, BorderLayout.WEST);
+        topRow.add(lbl("· · ·", font("Dialog", Font.PLAIN, 9), new Color(198, 198, 205, 80)), BorderLayout.EAST);
 
-        JLabel titleLbl = new JLabel(title, SwingConstants.CENTER);
-        titleLbl.setFont(F_CLABEL);
-        titleLbl.setForeground(accent);
-        titleLbl.setAlignmentX(CENTER_ALIGNMENT);
+        mainLbl.setFont(font("Manrope", Font.BOLD, unit != null ? 52 : 36));
+        mainLbl.setForeground(accent);
 
-        JPanel sep = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
-                g.setColor(new Color(80, 80, 90));
-                g.fillRect(0, 0, getWidth(), 1);
-            }
-        };
-        sep.setOpaque(false);
-        sep.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        sep.setPreferredSize(new Dimension(0, 1));
+        JPanel valueRow = transparent(new FlowLayout(FlowLayout.LEFT, 3, 0));
+        valueRow.add(mainLbl);
+        if (unit != null) valueRow.add(lbl(unit, font("Manrope", Font.BOLD, 26), accent));
+        if (subLbl != null) {
+            subLbl.setFont(font("Inter", Font.PLAIN, 13));
+            subLbl.setForeground(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 170));
+            valueRow.add(subLbl);
+        }
 
-        valLbl.setAlignmentX(CENTER_ALIGNMENT);
-        valLbl.setFont(F_VALUE);
-
-        JLabel unitLbl = new JLabel(unit, SwingConstants.CENTER);
-        unitLbl.setFont(F_UNIT);
-        unitLbl.setForeground(C_GRAY);
-        unitLbl.setAlignmentX(CENTER_ALIGNMENT);
-
-        pb.setAlignmentX(CENTER_ALIGNMENT);
-        pb.setMaximumSize(new Dimension(Integer.MAX_VALUE, 5));
-        pb.setPreferredSize(new Dimension(0, 5));
-
-        descLbl.setAlignmentX(CENTER_ALIGNMENT);
-
-        card.add(icon);
-        card.add(Box.createVerticalStrut(8));
-        card.add(titleLbl);
-        card.add(Box.createVerticalStrut(10));
-        card.add(sep);
-        card.add(Box.createVerticalGlue());
-        card.add(valLbl);
-        card.add(unitLbl);
-        card.add(Box.createVerticalGlue());
-        card.add(pb);
-        card.add(Box.createVerticalStrut(6));
-        card.add(descLbl);
+        card.add(topRow,   BorderLayout.NORTH);
+        card.add(valueRow, BorderLayout.CENTER);
         return card;
     }
 
-    // ── Rodapé ────────────────────────────────────────────────────────────
-    private JPanel buildFooter() {
-        JPanel p = new JPanel(new BorderLayout(8, 0)) {
+    private JPanel buildConnectionPanel() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 8)) {
             @Override protected void paintComponent(Graphics g) {
-                g.setColor(BG_SIDEBAR);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.setColor(C_LINE);
-                ((Graphics2D) g).fillRect(0, 0, getWidth(), 1);
+                Graphics2D g2 = aa(g);
+                g2.setColor(new Color(23, 31, 51, 180));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+                g2.dispose();
             }
         };
         p.setOpaque(false);
-        p.setBorder(new EmptyBorder(10, 20, 12, 20));
 
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        left.setOpaque(false);
+        cmbPortas.setPreferredSize(new Dimension(120, 28));
+        cmbPortas.setFont(font("Inter", Font.PLAIN, 11));
+        cmbPortas.setBackground(BG_CTRL);
+        cmbPortas.setForeground(C_PRI);
 
-        JLabel lblPorta = new JLabel("Porta:");
-        lblPorta.setForeground(C_GRAY);
-        lblPorta.setFont(F_CTRL);
-
-        cmbPortas.setPreferredSize(new Dimension(130, 30));
-        cmbPortas.setFont(F_CTRL);
-
-        btnAtualizar.setPreferredSize(new Dimension(36, 30));
-        btnAtualizar.setFont(new Font("Segoe UI", Font.PLAIN, 15));
+        styleBtn(btnAtualizar, BG_CTRL, C_SEC);
+        btnAtualizar.setPreferredSize(new Dimension(32, 28));
+        btnAtualizar.setFont(font("Dialog", Font.PLAIN, 14));
         btnAtualizar.setToolTipText("Atualizar portas");
 
-        btnConectar.setPreferredSize(new Dimension(108, 30));
-        btnConectar.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        styleBtn(btnConectar, C_HUMID, BG_SURFACE);
+        btnConectar.setPreferredSize(new Dimension(110, 28));
+        btnConectar.setFont(font("Inter", Font.BOLD, 11));
 
         btnConectar.addActionListener(e -> onConnectClicked());
         btnAtualizar.addActionListener(e -> { if (onRefreshPorts != null) onRefreshPorts.run(); });
 
-        left.add(lblPorta);
-        left.add(cmbPortas);
-        left.add(btnAtualizar);
-        left.add(btnConectar);
-
-        lblLastRead.setFont(F_CTRL);
-        lblLastRead.setForeground(C_GRAY);
-
-        p.add(left, BorderLayout.WEST);
-        p.add(lblLastRead, BorderLayout.EAST);
+        p.add(lbl("Porta:", font("Inter", Font.PLAIN, 11), C_SEC));
+        p.add(cmbPortas);
+        p.add(btnAtualizar);
+        p.add(btnConectar);
         return p;
     }
 
-    // ── Ação de conexão ───────────────────────────────────────────────────
-    private void onConnectClicked() {
-        String porta = (String) cmbPortas.getSelectedItem();
-        if (porta == null) return;
-        if ("Conectar".equals(btnConectar.getText())) {
-            if (onConnect != null) onConnect.accept(porta);
-        } else {
-            if (onDisconnect != null) onDisconnect.accept(porta);
-        }
+    private JPanel buildBottomNav() {
+        JPanel nav = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 8)) {
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = aa(g);
+                g2.setColor(new Color(11, 19, 38, 220));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 24, 24);
+                g2.dispose();
+            }
+        };
+        nav.setOpaque(false);
+        nav.setBorder(new EmptyBorder(4, 20, 8, 20));
+        nav.add(navTab("DASHBOARD", true));
+        nav.add(navTab("HISTÓRICO", false));
+        return nav;
     }
 
-    // ── API pública ───────────────────────────────────────────────────────
+    private JPanel navTab(String text, boolean active) {
+        Color c = active ? C_NAV_ON : C_NAV_OFF;
+        JPanel tab = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0)) {
+            @Override protected void paintComponent(Graphics g) {
+                if (active) {
+                    Graphics2D g2 = aa(g);
+                    g2.setColor(BG_CTRL);
+                    g2.fillRoundRect(0, 0, getWidth(), getHeight(), 999, 999);
+                    g2.dispose();
+                }
+            }
+        };
+        tab.setOpaque(false);
+        tab.setBorder(new EmptyBorder(8, 14, 8, 14));
+        tab.add(makeNavIcon(text.equals("DASHBOARD"), c));
+        tab.add(lbl(text, font("Inter", Font.BOLD, 9), c));
+        return tab;
+    }
 
-    /**
-     * Atualiza os cards com a leitura mais recente. Deve ser chamado na EDT.
-     *
-     * @param data dados do sensor
-     */
     public void updateData(SensorData data) {
-        lblTempVal.setText(String.valueOf(data.getTemperature()));
-        lblHumidVal.setText(String.valueOf(data.getHumidity()));
-        lblLuxVal.setText(String.valueOf(data.getLuminosity()));
-        lblTempDesc.setText(descTemp(data.getTemperature()));
-        lblHumidDesc.setText(descHumid(data.getHumidity()));
-        lblLuxDesc.setText(descLux(data.getLuminosity()));
-        pbTemp.setValue(Math.min(data.getTemperature(), 50));
-        pbHumid.setValue(data.getHumidity());
-        pbLux.setValue(data.getLuminosity());
-        lblLastRead.setText("Última leitura: " +
-                new java.text.SimpleDateFormat("HH:mm:ss")
-                        .format(new java.util.Date(data.getTimestamp())));
+        int t = data.getTemperature(), h = data.getHumidity(), l = data.getLuminosity();
+        lblTempVal.setText(String.valueOf(t));
+        lblHumidVal.setText(String.valueOf(h));
+        lblLuxLabel.setText(luxDesc(l));
+        lblLuxRaw.setText("(" + l + " lux)");
+        lblEnvStatus.setText(envStatus(t, h, l));
+        lblLastRead.setText("ÚLTIMA LEITURA: " +
+                new SimpleDateFormat("HH:mm:ss").format(new Date(data.getTimestamp())));
     }
 
-    /**
-     * Atualiza o indicador de status. Deve ser chamado na EDT.
-     *
-     * @param msg mensagem de status do SerialService
-     */
     public void setStatus(String msg) {
         boolean ok = msg.startsWith("CONNECTED");
-        String display;
-        if (msg.startsWith("CONNECTED")) {
-            String porta = msg.contains(": ") ? msg.substring(msg.indexOf(": ") + 2) : "";
-            display = "● Conectado" + (porta.isEmpty() ? "" : ": " + porta);
-        } else if (msg.startsWith("DISCONNECTED")) {
-            display = msg.contains("lost") ? "● Conexão perdida" : "● Desconectado";
-        } else if (msg.startsWith("ERROR")) {
-            display = "● Erro: " + msg.substring(msg.indexOf(":") + 2);
-        } else {
-            display = "● " + msg;
-        }
-        lblStatus.setText(display);
-        lblStatus.setForeground(ok ? C_OK : C_ERR);
+        lblDot.setForeground(ok ? C_OK : C_ERR);
+        lblBadgeTxt.setText(ok ? "CONECTADO" : "DESCONECTADO");
+        if (!ok) lblEnvStatus.setText("Aguardando...");
         btnConectar.setText(ok ? "Desconectar" : "Conectar");
         cmbPortas.setEnabled(!ok);
         btnAtualizar.setEnabled(!ok);
+        styleBtn(btnConectar, ok ? C_ERR : C_HUMID, ok ? Color.WHITE : BG_SURFACE);
     }
 
-    /**
-     * Preenche o combo de portas. Deve ser chamado na EDT.
-     *
-     * @param ports portas disponíveis
-     */
     public void setPorts(List<String> ports) {
         cmbPortas.removeAllItems();
-        if (ports.isEmpty()) {
-            cmbPortas.addItem("(Nenhuma porta)");
-        } else {
-            ports.forEach(cmbPortas::addItem);
-        }
+        if (ports.isEmpty()) cmbPortas.addItem("(Nenhuma porta)");
+        else ports.forEach(cmbPortas::addItem);
     }
 
-    /** @param cb acionado com a porta ao clicar "Conectar" */
     public void setOnConnect(Consumer<String> cb)    { this.onConnect = cb; }
-
-    /** @param cb acionado ao clicar "Desconectar" */
     public void setOnDisconnect(Consumer<String> cb) { this.onDisconnect = cb; }
-
-    /** @param cb acionado ao clicar no botão de atualizar portas */
     public void setOnRefreshPorts(Runnable cb)       { this.onRefreshPorts = cb; }
 
-    // ── Descrições ────────────────────────────────────────────────────────
-    private String descTemp(int t) {
-        if (t < 15) return "Muito frio";
-        if (t < 22) return "Frio";
-        if (t < 28) return "Confortavel";
-        if (t < 35) return "Quente";
-        return "Muito quente";
+    private void onConnectClicked() {
+        String p = (String) cmbPortas.getSelectedItem();
+        if (p == null) return;
+        if ("Conectar".equals(btnConectar.getText())) { if (onConnect    != null) onConnect.accept(p); }
+        else                                          { if (onDisconnect != null) onDisconnect.accept(p); }
     }
 
-    private String descHumid(int h) {
-        if (h < 20) return "Muito seco";
-        if (h < 40) return "Seco";
-        if (h < 70) return "Ideal";
-        return "Umido";
+    private String envStatus(int t, int h, int l) {
+        int s = 0;
+        if (t >= 18 && t <= 28) s++;
+        if (h >= 40 && h <= 70) s++;
+        if (l >= 200 && l <= 800) s++;
+        return s == 3 ? "Equilibrado" : s == 2 ? "Razoável" : s == 1 ? "Atenção" : "Crítico";
     }
 
-    private String descLux(int l) {
-        if (l < 200) return "Muito escuro";
+    private String luxDesc(int l) {
+        if (l < 200) return "Escuro";
         if (l < 500) return "Meia-luz";
-        if (l < 800) return "Claro";
-        return "Muito claro";
+        if (l < 800) return "Médio";
+        return "Claro";
     }
 
-    // ── Tipos de ícone ────────────────────────────────────────────────────
-    private enum IconType { TEMPERATURE, HUMIDITY, LUMINOSITY }
+    private enum IconType { TEMP, HUMID, LUX }
 
-    // ── Ícones pintados com Java2D ────────────────────────────────────────
-    private JComponent makeSensorIcon(IconType type, Color color) {
+    private JComponent makeSensorBadge(IconType type, Color accent, Color bg) {
+        int S = 40;
         return new JComponent() {
-            private static final int S = 48;
-            { setPreferredSize(new Dimension(S, S)); setMaximumSize(new Dimension(S, S)); setMinimumSize(new Dimension(S, S)); }
-
+            { setPreferredSize(new Dimension(S, S)); setMaximumSize(new Dimension(S, S)); }
             @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Graphics2D g2 = aa(g);
+                g2.setColor(bg);
+                g2.fillOval(0, 0, S, S);
+                g2.setColor(accent);
                 int cx = S / 2, cy = S / 2;
-
-                // Outer glow
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 22));
-                g2.fillOval(2, 2, S - 4, S - 4);
-                g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 90));
-                g2.setStroke(new BasicStroke(1.5f));
-                g2.drawOval(2, 2, S - 4, S - 4);
-                g2.setColor(color);
-
-                if (type == IconType.TEMPERATURE) {
-                    // Stem
-                    g2.fillRoundRect(cx - 3, 10, 6, 20, 4, 4);
-                    // Bulb
-                    g2.fillOval(cx - 7, 28, 14, 14);
-                    // Inner lighter
-                    g2.setColor(new Color(color.getRed(), color.getGreen(), color.getBlue(), 70));
-                    g2.fillRoundRect(cx - 1, 12, 2, 14, 2, 2);
-
-                } else if (type == IconType.HUMIDITY) {
-                    // Water drop using Path2D
-                    Path2D.Double drop = new Path2D.Double();
-                    drop.moveTo(cx, 10);
-                    drop.curveTo(cx + 12, 22, cx + 11, 34, cx, 38);
-                    drop.curveTo(cx - 11, 34, cx - 12, 22, cx, 10);
-                    g2.fill(drop);
-                    // Shine
-                    g2.setColor(new Color(255, 255, 255, 55));
-                    Path2D.Double shine = new Path2D.Double();
-                    shine.moveTo(cx - 3, 16);
-                    shine.curveTo(cx - 7, 22, cx - 6, 26, cx - 3, 28);
-                    shine.curveTo(cx - 1, 26, cx - 1, 22, cx - 3, 16);
-                    g2.fill(shine);
-
+                if (type == IconType.TEMP) {
+                    g2.fillRoundRect(cx - 3, 7, 6, 17, 4, 4);
+                    g2.fillOval(cx - 7, cy + 4, 14, 14);
+                } else if (type == IconType.HUMID) {
+                    Path2D.Double d = new Path2D.Double();
+                    d.moveTo(cx, 7);
+                    d.curveTo(cx + 9, 17, cx + 9, 29, cx, 33);
+                    d.curveTo(cx - 9, 29, cx - 9, 17, cx, 7);
+                    g2.fill(d);
                 } else {
-                    // Sun: center circle
-                    g2.fillOval(cx - 7, cy - 7, 14, 14);
-                    g2.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                    // 8 rays
+                    g2.fillOval(cx - 6, cy - 6, 12, 12);
+                    g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                     for (int i = 0; i < 8; i++) {
-                        double angle = Math.toRadians(i * 45.0);
-                        int x1 = (int) (cx + 11 * Math.cos(angle));
-                        int y1 = (int) (cy + 11 * Math.sin(angle));
-                        int x2 = (int) (cx + 17 * Math.cos(angle));
-                        int y2 = (int) (cy + 17 * Math.sin(angle));
-                        g2.drawLine(x1, y1, x2, y2);
+                        double a = Math.toRadians(i * 45.0);
+                        g2.drawLine((int) (cx + 9  * Math.cos(a)), (int) (cy + 9  * Math.sin(a)),
+                                    (int) (cx + 14 * Math.cos(a)), (int) (cy + 14 * Math.sin(a)));
                     }
                 }
                 g2.dispose();
@@ -465,50 +371,69 @@ public class MainView extends JFrame {
         };
     }
 
-    private JComponent makeHomeIcon() {
+    private JComponent makeWifiIcon() {
         return new JComponent() {
-            private static final int S = 38;
-            { setPreferredSize(new Dimension(S, S)); setMaximumSize(new Dimension(S, S)); setMinimumSize(new Dimension(S, S)); }
+            { Dimension d = new Dimension(22, 16); setPreferredSize(d); setMaximumSize(d); }
             @Override protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(new Color(180, 160, 255));
-                // Roof triangle
-                int[] rx = {S/2, S-4, 4}, ry = {4, 20, 20};
-                g2.fillPolygon(rx, ry, 3);
-                // House body
-                g2.setColor(new Color(160, 140, 240));
-                g2.fillRect(8, 19, S-16, S-20);
-                // Door
-                g2.setColor(new Color(40, 40, 50, 180));
-                g2.fillRect(S/2-4, 26, 8, S-26-1);
+                Graphics2D g2 = aa(g);
+                g2.setColor(C_HUMID);
+                g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                g2.drawArc(1, -2, 20, 20, 30, 120);
+                g2.drawArc(4,  2, 14, 14, 30, 120);
+                g2.drawArc(7,  6,  8,  8, 30, 120);
+                g2.fillOval(9, 13, 4, 4);
                 g2.dispose();
             }
         };
     }
 
-    // ── Fábricas de widgets ───────────────────────────────────────────────
-    private JLabel makeValueLabel(String text, Color color) {
-        JLabel l = new JLabel(text, SwingConstants.CENTER);
-        l.setFont(F_VALUE);
-        l.setForeground(color);
-        return l;
+    private JComponent makeNavIcon(boolean dash, Color c) {
+        int S = 18;
+        return new JComponent() {
+            { Dimension d = new Dimension(S, S); setPreferredSize(d); setMaximumSize(d); }
+            @Override protected void paintComponent(Graphics g) {
+                Graphics2D g2 = aa(g);
+                g2.setColor(c);
+                if (dash) {
+                    g2.fillRoundRect(0,  0,  7, 7, 2, 2);
+                    g2.fillRoundRect(11, 0,  7, 7, 2, 2);
+                    g2.fillRoundRect(0,  11, 7, 7, 2, 2);
+                    g2.fillRoundRect(11, 11, 7, 7, 2, 2);
+                } else {
+                    g2.setStroke(new BasicStroke(1.5f));
+                    g2.drawOval(1, 1, S - 2, S - 2);
+                    g2.drawLine(S / 2, S / 2, S / 2, 4);
+                    g2.drawLine(S / 2, S / 2, S - 4, S / 2);
+                }
+                g2.dispose();
+            }
+        };
     }
 
-    private JLabel makeDescLabel(String text) {
-        JLabel l = new JLabel(text, SwingConstants.CENTER);
-        l.setFont(F_DESC);
-        l.setForeground(C_GRAY);
-        return l;
+    private static Color  c(String hex)                { return Color.decode(hex); }
+    private static Font   font(String f, int s, int sz) { return new Font(f, s, sz); }
+    private static JLabel lbl(String t, Font f, Color fg) {
+        JLabel l = new JLabel(t); l.setFont(f); l.setForeground(fg); return l;
     }
-
-    private JProgressBar makeBar(Color color, int min, int max) {
-        JProgressBar pb = new JProgressBar(min, max);
-        pb.setValue(0);
-        pb.setStringPainted(false);
-        pb.setForeground(color);
-        pb.setBackground(new Color(55, 55, 60));
-        pb.setBorderPainted(false);
-        return pb;
+    private static JPanel solid(Color bg, LayoutManager lm) {
+        JPanel p = new JPanel(lm) {
+            @Override protected void paintComponent(Graphics g) {
+                g.setColor(getBackground()); g.fillRect(0, 0, getWidth(), getHeight());
+            }
+        };
+        p.setBackground(bg); p.setOpaque(false); return p;
+    }
+    private static JPanel transparent(LayoutManager lm) {
+        JPanel p = lm != null ? new JPanel(lm) : new JPanel();
+        p.setOpaque(false); return p;
+    }
+    private static Graphics2D aa(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        return g2;
+    }
+    private static void styleBtn(JButton b, Color bg, Color fg) {
+        b.setBackground(bg); b.setForeground(fg);
+        b.setOpaque(true); b.setBorderPainted(false); b.setFocusPainted(false);
     }
 }

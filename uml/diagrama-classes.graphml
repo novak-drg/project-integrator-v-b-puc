@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<graphml xmlns="http://graphml.graphstruct.org/graphml"
+         xmlns:java="http://www.yworks.com/xml/yfiles-common/1.0/java"
+         xmlns:sys="http://www.yworks.com/xml/yfiles-common/markup/primitives/2.0"
+         xmlns:x="http://www.yworks.com/xml/yfiles-common/markup/2.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:y="http://www.yworks.com/xml/graphml"
+         xmlns:yed="http://www.yworks.com/xml/yed/3"
+         xsi:schemaLocation="http://graphml.graphstruct.org/graphml
+           http://www.yworks.com/xml/schema/graphml/1.1/ygraphml.xsd">
+
+  <key attr.name="Description" attr.type="string" for="graph" id="d0"/>
+  <key for="port" id="d1" yfiles.type="portgraphics"/>
+  <key for="port" id="d2" yfiles.type="portgeometry"/>
+  <key for="port" id="d3" yfiles.type="portuserdata"/>
+  <key attr.name="url" attr.type="string" for="node" id="d4"/>
+  <key attr.name="description" attr.type="string" for="node" id="d5"/>
+  <key for="node" id="d6" yfiles.type="nodegraphics"/>
+  <key for="graphml" id="d7" yfiles.type="resources"/>
+  <key attr.name="url" attr.type="string" for="edge" id="d8"/>
+  <key attr.name="description" attr.type="string" for="edge" id="d9"/>
+  <key for="edge" id="d10" yfiles.type="edgegraphics"/>
+
+  <graph edgedefault="directed" id="G">
+    <data key="d0">Diagrama de Classes — Sistema de Monitoramento de Ambientes Inteligentes&#xA;Projeto Integrador V-B | PUC Goiás | ADS 2026 | Padrão MVC</data>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- NODO 1: AppController (Controller)          -->
+    <!-- ═══════════════════════════════════════════ -->
+    <node id="n0">
+      <data key="d6">
+        <y:UMLClassNode>
+          <y:Geometry height="230" width="270" x="30" y="30"/>
+          <y:Fill color="#DBEAFE" transparent="false"/>
+          <y:BorderStyle color="#1D4ED8" type="line" width="2.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="node_width"
+                       fontFamily="Arial" fontSize="13" fontStyle="bold"
+                       textColor="#1E3A8A">AppController</y:NodeLabel>
+          <y:UML clipContent="true" constraint="" omitDetails="false"
+                 stereotype="Controller" use3DEffect="false">
+            <y:AttributeLabel>- serialService : SerialService
+- view : MainView
+- scheduler : ScheduledExecutorService
+- demoTask : ScheduledFuture&lt;?&gt;
+- random : Random</y:AttributeLabel>
+            <y:MethodLabel>+ AppController()
+- setupCallbacks() : void
+- startDemo() : void
+- stopDemo() : void
++ refreshPortList() : void
++ start() : void
++ {static} main(String[]) : void</y:MethodLabel>
+          </y:UML>
+        </y:UMLClassNode>
+      </data>
+    </node>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- NODO 2: SerialService (Service)             -->
+    <!-- ═══════════════════════════════════════════ -->
+    <node id="n1">
+      <data key="d6">
+        <y:UMLClassNode>
+          <y:Geometry height="230" width="270" x="370" y="30"/>
+          <y:Fill color="#DCFCE7" transparent="false"/>
+          <y:BorderStyle color="#166534" type="line" width="2.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="node_width"
+                       fontFamily="Arial" fontSize="13" fontStyle="bold"
+                       textColor="#14532D">SerialService</y:NodeLabel>
+          <y:UML clipContent="true" constraint="" omitDetails="false"
+                 stereotype="Service" use3DEffect="false">
+            <y:AttributeLabel>- port : SerialPort
+- readThread : Thread
+- running : boolean
+- dataListeners : List&lt;Consumer&lt;SensorData&gt;&gt;
+- statusListeners : List&lt;Consumer&lt;String&gt;&gt;</y:AttributeLabel>
+            <y:MethodLabel>+ addDataListener(Consumer&lt;SensorData&gt;) : void
++ addStatusListener(Consumer&lt;String&gt;) : void
++ {static} listPorts() : List&lt;String&gt;
++ connect(String) : boolean
++ disconnect() : void
++ isConnected() : boolean
+- readLoop() : void</y:MethodLabel>
+          </y:UML>
+        </y:UMLClassNode>
+      </data>
+    </node>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- NODO 3: MainView (View)                     -->
+    <!-- ═══════════════════════════════════════════ -->
+    <node id="n2">
+      <data key="d6">
+        <y:UMLClassNode>
+          <y:Geometry height="230" width="270" x="30" y="330"/>
+          <y:Fill color="#FEF9C3" transparent="false"/>
+          <y:BorderStyle color="#854D0E" type="line" width="2.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="node_width"
+                       fontFamily="Arial" fontSize="13" fontStyle="bold"
+                       textColor="#713F12">MainView</y:NodeLabel>
+          <y:UML clipContent="true" constraint="" omitDetails="false"
+                 stereotype="View" use3DEffect="false">
+            <y:AttributeLabel>- lblTempVal : JLabel
+- lblHumidVal : JLabel
+- lblLuxLabel : JLabel
+- cmbPortas : JComboBox&lt;String&gt;
+- btnConectar : JButton
+- btnAtualizar : JButton
+- onConnect : Consumer&lt;String&gt;</y:AttributeLabel>
+            <y:MethodLabel>+ MainView()
++ updateData(SensorData) : void
++ setStatus(String) : void
++ setPorts(List&lt;String&gt;) : void
++ setOnConnect(Consumer&lt;String&gt;) : void
++ setOnDisconnect(Consumer&lt;String&gt;) : void
++ setOnRefreshPorts(Runnable) : void</y:MethodLabel>
+          </y:UML>
+        </y:UMLClassNode>
+      </data>
+    </node>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- NODO 4: SensorData (Model)                  -->
+    <!-- ═══════════════════════════════════════════ -->
+    <node id="n3">
+      <data key="d6">
+        <y:UMLClassNode>
+          <y:Geometry height="230" width="270" x="370" y="330"/>
+          <y:Fill color="#FEE2E2" transparent="false"/>
+          <y:BorderStyle color="#991B1B" type="line" width="2.0"/>
+          <y:NodeLabel alignment="center" autoSizePolicy="node_width"
+                       fontFamily="Arial" fontSize="13" fontStyle="bold"
+                       textColor="#7F1D1D">SensorData</y:NodeLabel>
+          <y:UML clipContent="true" constraint="" omitDetails="false"
+                 stereotype="Model" use3DEffect="false">
+            <y:AttributeLabel>- temperature : int
+- humidity : int
+- luminosity : int
+- timestamp : long</y:AttributeLabel>
+            <y:MethodLabel>+ SensorData(int, int, int)
++ getTemperature() : int
++ getHumidity() : int
++ getLuminosity() : int
++ getTimestamp() : long
++ getLuminosityDescription() : String
++ {static} fromCsv(String) : SensorData
++ toString() : String</y:MethodLabel>
+          </y:UML>
+        </y:UMLClassNode>
+      </data>
+    </node>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- RELACIONAMENTOS                             -->
+    <!-- ═══════════════════════════════════════════ -->
+
+    <!-- 1. AppController ──usa──▶ SerialService (Associação sólida) -->
+    <edge id="e0" source="n0" target="n1">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="135" sy="0" tx="-135" ty="0"/>
+          <y:LineStyle color="#1D4ED8" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:EdgeLabel alignment="center" fontFamily="Arial" fontSize="10"
+                       fontStyle="bold" textColor="#1D4ED8">usa</y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <!-- 2. AppController ──controla──▶ MainView (Associação sólida) -->
+    <edge id="e1" source="n0" target="n2">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0" sy="115" tx="0" ty="-115"/>
+          <y:LineStyle color="#1D4ED8" type="line" width="2.0"/>
+          <y:Arrows source="none" target="standard"/>
+          <y:EdgeLabel alignment="center" fontFamily="Arial" fontSize="10"
+                       fontStyle="bold" textColor="#1D4ED8">controla</y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <!-- 3. SerialService ···cria···▶ SensorData (Dependência tracejada) -->
+    <edge id="e2" source="n1" target="n3">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="0" sy="115" tx="0" ty="-115"/>
+          <y:LineStyle color="#854D0E" type="dashed" width="2.0"/>
+          <y:Arrows source="none" target="open"/>
+          <y:EdgeLabel alignment="center" fontFamily="Arial" fontSize="10"
+                       fontStyle="bold" textColor="#854D0E">«cria»</y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+    <!-- 4. MainView ···exibe···▶ SensorData (Dependência tracejada) -->
+    <edge id="e3" source="n2" target="n3">
+      <data key="d10">
+        <y:PolyLineEdge>
+          <y:Path sx="135" sy="0" tx="-135" ty="0"/>
+          <y:LineStyle color="#854D0E" type="dashed" width="2.0"/>
+          <y:Arrows source="none" target="open"/>
+          <y:EdgeLabel alignment="center" fontFamily="Arial" fontSize="10"
+                       fontStyle="bold" textColor="#854D0E">«exibe»</y:EdgeLabel>
+          <y:BendStyle smoothed="false"/>
+        </y:PolyLineEdge>
+      </data>
+    </edge>
+
+  </graph>
+</graphml>
